@@ -176,10 +176,10 @@ def figTSeries(sol,params,f_name='ODE_tseries.png'):
 
     plt.figure(figsize=(6, 12), dpi=200) # make new figure
 
-    ax = plt.subplot(5, 1, 1) # Fig A
+    ax = plt.subplot(4, 1, 1) # Fig A
     for i in range( params['n_strains'] ):
         plt.plot(t, sol.y[i,:], label='P'+str(i+1), color=cb_palette[2], alpha=0.2)
-
+    parasites= np.array(sol.y[0:params['n_strains'],:].sum(axis=0))
     plt.plot(t, sol.y[0:params['n_strains'],:].sum(axis=0), label=r'$P$', color=cb_palette[3])
     plt.yscale('log')
     # plt.ylim(1,params['K']*params['n']*10)
@@ -188,12 +188,13 @@ def figTSeries(sol,params,f_name='ODE_tseries.png'):
     handles, labels = ax.get_legend_handles_labels()
     # plt.legend(handles, labels)
 
-    ax = plt.subplot(5, 1, 2) # Fig A
+    ax = plt.subplot(4, 1, 2) # Fig A
+    #cross_immunity = np.array(sol.y[-1,:])
     for i in range( params['n_strains'] ):
         plt.plot(t, sol.y[params['n_strains']+i,:], label='S'+str(i+1), color=cb_palette[7], alpha=0.2)
 
     # plt.plot(t, sol.y[params['n_strains']:2*params['n_strains'],:].sum(axis=0), label=r'$S$', color=cb_palette[6])
-
+    
     plt.plot(t, sol.y[-1,:], label='Cross Immunity', color=cb_palette[1])
     # plt.yscale('log')
     # plt.ylim(1e-4,1.1)
@@ -202,10 +203,10 @@ def figTSeries(sol,params,f_name='ODE_tseries.png'):
     handles, labels = ax.get_legend_handles_labels()
     # plt.legend(handles, labels)
 
-    ax = plt.subplot(5, 1, 3) # Fig A
+    ax = plt.subplot(4, 1, 3) # Fig A
 
     # plt.plot(t, sol.y[params['n_strains']:2*params['n_strains'],:].sum(axis=0), label=r'$S$', color=cb_palette[6])
-
+    coi= np.array(sol.y[0:params['n_strains'],:] > 0 ).sum(axis=0)
     plt.plot(t, ( sol.y[0:params['n_strains'],:] > 0 ).sum(axis=0), label='C', color=cb_palette[4])
     # plt.yscale('log')
     # plt.ylim(1e-4,1.1)
@@ -214,34 +215,34 @@ def figTSeries(sol,params,f_name='ODE_tseries.png'):
     handles, labels = ax.get_legend_handles_labels()
     # plt.legend(handles, labels)
     
-    ax = plt.subplot(5, 1, 4) # Fig A
+    ax = plt.subplot(4, 1, 4) # Fig A
 
     # plt.plot(t, sol.y[params['n_strains']:2*params['n_strains'],:].sum(axis=0), label=r'$S$', color=cb_palette[6])
-    shannon_diversity = np.sum(np.where(
-        sol.y[0:params['n_strains'], :] > 0, sol.y[0:params['n_strains'], :] * np.log(sol.y[0:params['n_strains'], :]), 0), axis=0) #cambiar 
-    plt.plot(t, shannon_diversity, label='Shannon Diversity', color=cb_palette[5])
-    # plt.ylim(1e-4,1.1)
+    P= sol.y[0: params['n_strains'],:]
+    sum= P.sum(axis=0)
+    sum[sum<1]=1
+    
+    
+    frac = P / sum
+    
+    shannon_diversity = - np.sum(frac * np.log( np.maximum( frac,1e-10 ) ), axis=0)
+    plt.plot(t, shannon_diversity, label='Shannon Diversity', color=cb_palette[6])
+    
+    
+    plt.ylim(1e-4,1.1)
     plt.xlabel('Time (days)')
     plt.ylabel('Shannon diversity')
     handles, labels = ax.get_legend_handles_labels()
     # plt.legend(handles, labels)
     
-    
-    ax = plt.subplot(5, 1, 5) # Fig A
+
 
     # plt.plot(t, sol.y[params['n_strains']:2*params['n_strains'],:].sum(axis=0), label=r'$S$', color=cb_palette[6])
-    shannon_evenness = np.where(
-        (sol.y[0:params['n_strains'], :]).sum(axis=0) != 0,
-        shannon_diversity / np.log((sol.y[0:params['n_strains'], :]).sum(axis=0)),
-        0
-    )
-    plt.plot(t, shannon_evenness, label='Shannon Evenness', color=cb_palette[6])
-    plt.yscale('log')
-    # plt.ylim(1e-4,1.1)
-    plt.xlabel('Time (days)')
-    plt.ylabel('Shannon evenness')
-    handles, labels = ax.get_legend_handles_labels()
-    # plt.legend(handles, labels)
+    shannon_evenness = shannon_diversity / np.log( np.maximum( coi,2 ) )
+    
+    plt.plot(t, shannon_evenness, label='Shannon Evenness', color=cb_palette[5])
+    plt.legend()
+    
    
 
     plt.savefig(f_name, bbox_inches='tight')
@@ -377,6 +378,8 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
         return pd.concat([persister,non_persister],ignore_index=True)
     else:
         return y_out
+    
+
 
 
 # Solving model
@@ -397,16 +400,22 @@ def solveModel():
 
     # Solve model
     sol = odeSolver(p['odeFun'],t,y_0,p,solver="RK45")
+   
 
-    print(np.array(sol.persister_t).astype('int'))
-    # print(sol.persister_y)
+    # print(np.array(sol.persister_t).astype('int'))
+    # # print(sol.persister_y)
 
-    # Call plotting of figure 1
+    # # Call plotting of figure 1
+    
+    
     figTSeries(sol,p,f_name='ODE_tseries_persistence_single6.png')
 
+    
     plt.close()
+    return sol
+    
 
-solveModel()
+sol= solveModel()
 
 # multiSim
 
