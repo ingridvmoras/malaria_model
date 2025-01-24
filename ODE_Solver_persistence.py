@@ -231,7 +231,7 @@ def figTSeries(sol,params,f_name='ODE_tseries.png'):
     
     plt.ylim(1e-4,1.1)
     plt.xlabel('Time (days)')
-    plt.ylabel('Shannon diversity')
+    plt.ylabel('Pathogens')
     handles, labels = ax.get_legend_handles_labels()
     # plt.legend(handles, labels)
     
