@@ -106,25 +106,19 @@ def odeFunNoLimitImmunity(t,y,**kwargs):
 
     return dy
 
-def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365):
 
-    """
-    Returns default values constant values for the model in a dictionary.
-    """
 
-    strains_per_season = np.random.poisson( lam=mean_infections_per_season, size=years ).astype(int)
-
-    params = {
+params = {
         't_0':0,          # h - Initial time value
-        't_f':year_duration*years,      # h - Final time value
+        't_f': 0,      # h - Final time value
         't_den':0.1,      # h - Size of time step to evaluate with
 
-        't_dry':t_dry,
-        'year_duration':year_duration,
+        't_dry':0,
+        'year_duration':0,
 
-        'n_strains': strains_per_season.sum().astype(int)+1,
+        'n_strains': 0,
         'inoc':5.6e4 / 5e6,
-        'inf_times': np.append( np.concatenate([ np.sort( np.random.random(strains_per_season[y]) * t_dry + ( y * year_duration ) ) for y in range(years) ]), [year_duration*years] ),
+        'inf_times': 0,
         'cross_immunity_start':0,
 
         # 'a':7e-6*np.ones(n_strains),       # 1/generation - infected bacteria death rate
@@ -139,6 +133,31 @@ def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365)
         'odeFun':odeFunNoLimitImmunity,
     }
 
+
+def params(params,mean_infections_per_season=3, t_dry=181, years=20, year_duration=365):
+
+    """
+    Returns default values constant values for the model in a dictionary.
+    """
+
+    strains_per_season = np.random.poisson( lam=mean_infections_per_season, size=years ).astype(int)
+    params['n_strains'] = strains_per_season.sum()
+    params['t_0'] = 0
+    params['t_f'] = year_duration*years
+    params['t_den'] = 0.1
+    params['t_dry'] = t_dry
+    params['year_duration'] = year_duration
+    params['inf_times'] = np.append( np.concatenate([ np.sort( np.random.random(strains_per_season[y]) * t_dry + ( y * year_duration ) ) for y in range(years) ]), [year_duration*years] )
+    params['inoc'] = 5.6e4 / 5e6
+    params['cross_immunity_start'] = 0
+    params['a'] = 7e-6
+    params['g'] = 1e-6
+    params['d'] = 3.7e-4
+    params['r'] = np.log(14)/(2)
+    params['K_s'] = 2
+    params['K_c'] = 2
+    params['odeFun'] = odeFunNoLimitImmunity
+    
     return params
 
 
