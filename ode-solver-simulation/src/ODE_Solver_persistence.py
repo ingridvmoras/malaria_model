@@ -21,11 +21,7 @@ import seaborn as sns # for plots
 import matplotlib.pyplot as plt
 import matplotlib.colors as mlc
 
-sns.set_style("white") # make pwetty plots
-cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73",
-              "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
-    # http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/#a-colorblind-friendly-palette
-    # http://jfly.iam.u-tokyo.ac.jp/color/
+
 
 
 
@@ -108,38 +104,38 @@ def odeFunNoLimitImmunity(t,y,**kwargs):
 
 
 
-params = {
-        't_0':0,          # h - Initial time value
-        't_f': 0,      # h - Final time value
-        't_den':0.1,      # h - Size of time step to evaluate with
+#params = {
+    #     't_0':0,          # h - Initial time value
+    #     't_f': 0,      # h - Final time value
+    #     't_den':0.1,      # h - Size of time step to evaluate with
 
-        't_dry':0,
-        'year_duration':0,
+    #     't_dry':0,
+    #     'year_duration':0,
 
-        'n_strains': 0,
-        'inoc':5.6e4 / 5e6,
-        'inf_times': 0,
-        'cross_immunity_start':0,
+    #     'n_strains': 0,
+    #     'inoc':5.6e4 / 5e6,
+    #     'inf_times': 0,
+    #     'cross_immunity_start':0,
 
-        # 'a':7e-6*np.ones(n_strains),       # 1/generation - infected bacteria death rate
-        # 'g':1e-6*np.ones(n_strains),     # 1/(PFU/mL * h) - phage-bacteria infection rate
-        'a':7e-6,       # 1/generation - infected bacteria death rate
-        'g':1e-6,     # 1/(PFU/mL * h) - phage-bacteria infection rate
-        'd':3.7e-4,     # 1/(PFU/mL * h) - phage-bacteria infection rate
-        'r':np.log(14)/(2),  # CFU/mL - max bacteria growth rate
-        'K_s':2,          # 1/generation - spacer loss rate
-        'K_c':2,       # 1/(CFU/mL * h) - HGT rate of spacer
+    #     # 'a':7e-6*np.ones(n_strains),       # 1/generation - infected bacteria death rate
+    #     # 'g':1e-6*np.ones(n_strains),     # 1/(PFU/mL * h) - phage-bacteria infection rate
+    #     'a':7e-6,       # 1/generation - infected bacteria death rate
+    #     'g':1e-6,     # 1/(PFU/mL * h) - phage-bacteria infection rate
+    #     'd':3.7e-4,     # 1/(PFU/mL * h) - phage-bacteria infection rate
+    #     'r':np.log(14)/(2),  # CFU/mL - max bacteria growth rate
+    #     'K_s':2,          # 1/generation - spacer loss rate
+    #     'K_c':2,       # 1/(CFU/mL * h) - HGT rate of spacer
 
-        'odeFun':odeFunNoLimitImmunity,
-    }
+    #     'odeFun':odeFunNoLimitImmunity,
+    # }
 
 
-def params(params,mean_infections_per_season=3, t_dry=181, years=20, year_duration=365):
+def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365):
 
     """
     Returns default values constant values for the model in a dictionary.
     """
-
+    params={}
     strains_per_season = np.random.poisson( lam=mean_infections_per_season, size=years ).astype(int)
     params['n_strains'] = strains_per_season.sum()
     params['t_0'] = 0
@@ -153,7 +149,7 @@ def params(params,mean_infections_per_season=3, t_dry=181, years=20, year_durati
     params['a'] = 7e-6
     params['g'] = 1e-6
     params['d'] = 3.7e-4
-    params['r'] = np.log(14)/(2)
+    params['r'] = np.log(14) 
     params['K_s'] = 2
     params['K_c'] = 2
     params['odeFun'] = odeFunNoLimitImmunity
@@ -182,89 +178,19 @@ def initCond(params):
 
     return y0
 
-def figTSeries(sol,params,f_name='ODE_tseries.png'):
-
-    """
-    This function makes a plot for Figure 1 by taking all the solution objects
-    as arguments, and prints out the plot to a file.
-    Arguments:
-        sol : solution object taken from solver output
-    """
-
-    t = sol.t[:] # get time values
-
-    plt.figure(figsize=(6, 12), dpi=200) # make new figure
-
-    ax = plt.subplot(4, 1, 1) # Fig A
-    for i in range( params['n_strains'] ):
-        plt.plot(t, sol.y[i,:], label='P'+str(i+1), color=cb_palette[2], alpha=0.2)
-    parasites= np.array(sol.y[0:params['n_strains'],:].sum(axis=0))
-    plt.plot(t, sol.y[0:params['n_strains'],:].sum(axis=0), label=r'$P$', color=cb_palette[3])
-    plt.yscale('log')
-    # plt.ylim(1,params['K']*params['n']*10)
-    plt.xlabel('Time (days)')
-    plt.ylabel('Parasites')
-    handles, labels = ax.get_legend_handles_labels()
-    # plt.legend(handles, labels)
-
-    ax = plt.subplot(4, 1, 2) # Fig A
-    #cross_immunity = np.array(sol.y[-1,:])
-    for i in range( params['n_strains'] ):
-        plt.plot(t, sol.y[params['n_strains']+i,:], label='S'+str(i+1), color=cb_palette[7], alpha=0.2)
-
-    # plt.plot(t, sol.y[params['n_strains']:2*params['n_strains'],:].sum(axis=0), label=r'$S$', color=cb_palette[6])
-    
-    plt.plot(t, sol.y[-1,:], label='Cross Immunity', color=cb_palette[1])
-    # plt.yscale('log')
-    # plt.ylim(1e-4,1.1)
-    plt.xlabel('Time (days)')
-    plt.ylabel('Immune response')
-    handles, labels = ax.get_legend_handles_labels()
-    # plt.legend(handles, labels)
-
-    ax = plt.subplot(4, 1, 3) # Fig A
-
-    # plt.plot(t, sol.y[params['n_strains']:2*params['n_strains'],:].sum(axis=0), label=r'$S$', color=cb_palette[6])
-    coi= np.array(sol.y[0:params['n_strains'],:] > 0 ).sum(axis=0)
-    plt.plot(t, ( sol.y[0:params['n_strains'],:] > 0 ).sum(axis=0), label='C', color=cb_palette[4])
-    # plt.yscale('log')
-    # plt.ylim(1e-4,1.1)
-    plt.xlabel('Time (days)')
-    plt.ylabel('COI')
-    handles, labels = ax.get_legend_handles_labels()
-    # plt.legend(handles, labels)
-    
-    ax = plt.subplot(4, 1, 4) # Fig A
-
-    # plt.plot(t, sol.y[params['n_strains']:2*params['n_strains'],:].sum(axis=0), label=r'$S$', color=cb_palette[6])
-    P= sol.y[0: params['n_strains'],:]
-    sum= P.sum(axis=0)
-    sum[sum<1]=1
-    
-    
-    frac = P / sum
-    
-    shannon_diversity = - np.sum(frac * np.log( np.maximum( frac,1e-10 ) ), axis=0)
-    plt.plot(t, shannon_diversity, label='Shannon Diversity', color=cb_palette[6])
-    
-    
-    plt.ylim(1e-4,1.1)
-    plt.xlabel('Time (days)')
-    plt.ylabel('Pathogens')
-    handles, labels = ax.get_legend_handles_labels()
-    # plt.legend(handles, labels)
-    
+def shannon_diversity(sol,n_strains):
+    parasites = np.array(sol.y[0:n_strains, :].sum(axis=0))
+    cross_im= sol.y[-1, :]
+    P = sol.y[0: n_strains, :]
+    coi = np.array(sol.y[0:n_strains, :] > 0).sum(axis=0)
+    sum_P = P.sum(axis=0)
+    sum_P[sum_P < 1] = 1
+    frac = P / sum_P
+    shannon_diversity = -np.sum(frac * np.log(np.maximum(frac, 1e-10)), axis=0)
+    shannon_evenness = shannon_diversity / np.log(np.maximum(coi, 2))
+    return parasites,cross_im,coi,shannon_diversity,shannon_evenness
 
 
-    # plt.plot(t, sol.y[params['n_strains']:2*params['n_strains'],:].sum(axis=0), label=r'$S$', color=cb_palette[6])
-    shannon_evenness = shannon_diversity / np.log( np.maximum( coi,2 ) )
-    
-    plt.plot(t, shannon_evenness, label='Shannon Evenness', color=cb_palette[5])
-    plt.legend()
-    
-   
-
-    plt.savefig(f_name, bbox_inches='tight')
 
 # Pre-defined methods #
 # These shouldn't have to be modified for different models
@@ -404,7 +330,7 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
 # Solving model
 # To generate data, uncomment the following...
 # Single timecourse
-def solveModel():
+def solveModel(params):
 
     '''
     Main method containing single solver and plotter calls.
@@ -412,7 +338,10 @@ def solveModel():
     '''
 
     # Set up model conditions
-    p = params() # get parameter values, store in dictionary p
+    if not params:
+        p = params() # get parameter values, store in dictionary p
+    else:
+        p = params
     y_0 = initCond(p) # get initial conditions
     t = np.linspace(p['t_0'],p['t_f'],int((p['t_f']-p['t_0'])/p['t_den']) + 1)
         # time vector based on minimum, maximum, and time step values
@@ -426,15 +355,15 @@ def solveModel():
 
     # # Call plotting of figure 1
     
-    
-    figTSeries(sol,p,f_name='ODE_tseries_persistence_single6.png')
-
-    
-    plt.close()
     return sol
+
+   #figTSeries(sol,p,f_name='ODE_tseries_persistence_single6.png')
+
+    
+    #plt.close()
     
 
-sol= solveModel()
+#sol= solveModel()
 
 # multiSim
 
