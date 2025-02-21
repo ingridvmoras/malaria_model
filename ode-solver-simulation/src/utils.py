@@ -1,4 +1,32 @@
-from ODE_Solver_persistence import solveModel
+from ODE_Solver_persistence import initCond, odeSolver, odeFunNoLimitImmunity
+import numpy as np
+
+
+def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365):
+
+    """
+    Returns default values constant values for the model in a dictionary.
+    """
+    params={}
+    strains_per_season = np.random.poisson( lam=mean_infections_per_season, size=years ).astype(int)
+    params['n_strains'] = strains_per_season.sum()
+    params['t_0'] = 0
+    params['t_f'] = year_duration*years
+    params['t_den'] = 0.1
+    params['t_dry'] = t_dry
+    params['year_duration'] = year_duration
+    params['inf_times'] = np.append( np.concatenate([ np.sort( np.random.random(strains_per_season[y]) * t_dry + ( y * year_duration ) ) for y in range(years) ]), [year_duration*years] )
+    params['inoc'] = 5.6e4 / 5e6
+    params['cross_immunity_start'] = 0
+    params['a'] = 7e-6 
+    params['g'] = 1e-6
+    params['d'] = 3.7e-4
+    params['r'] = np.log(14)/(2)
+    params['K_s'] = 2
+    params['K_c'] = 2
+    params['odeFun'] = odeFunNoLimitImmunity
+    
+    return params
 
 def sweep_mean_infections(params, mean_infections_list):
     results = []
@@ -18,16 +46,67 @@ def sweep_parameters(params, parameter, values):
         results.append((value, sol))
     return results
 
-def runs(params,times):
+def runs(param,params,times):
     results= []
-    for i in range(times):
-        sol= solveModel(params)
-        results.append((i, sol))
-    return results
+    if param=='r':
+        for i in range(times):
+            p= params.copy()
+            p['r'] = np.log(np.random.uniform(1, 14, p['n_strains']))/2
+            sol= solveModel(p)
+            results.append((i, sol))
+        return results
+    elif param=='a':
+        exponents = np.arange(5, 7, 0.1)
+        alpha_values = 7 * 10**(-exponents)
+        for i in range(times):
+            p = params.copy()
+            p['a'] = np.random.choice(alpha_values, p['n_strains'])
+            sol = solveModel(p)
+            results.append((i, sol))
+        return results
+
+def shannon_diversity(sol,n_strains):
+    parasites = np.array(sol.y[0:n_strains, :].sum(axis=0))
+    cross_im= sol.y[-1, :]
+    P = sol.y[0: n_strains, :]
+    coi = np.array(sol.y[0:n_strains, :] > 0).sum(axis=0)
+    sum_P = P.sum(axis=0)
+    sum_P[sum_P < 1] = 1
+    frac = P / sum_P
+    shannon_diversity = -np.sum(frac * np.log(np.maximum(frac, 1e-10)), axis=0)
+    shannon_evenness = shannon_diversity / np.log(np.maximum(coi, 2))
+    return parasites,cross_im,coi,shannon_diversity,shannon_evenness
+
+def solveModel(p=None):
+
+    '''
+    Main method containing single solver and plotter calls.
+    Writes figures to file.
+    '''
+
+    # Set up model conditions
+    if not params:
+        p = params() # get parameter values, store in dictionary p
+    
+    y_0 = initCond(p) # get initial conditions
+    t = np.linspace(p['t_0'],p['t_f'],int((p['t_f']-p['t_0'])/p['t_den']) + 1)
+        # time vector based on minimum, maximum, and time step values
+
+    # Solve model
+    sol = odeSolver(p['odeFun'],t,y_0,p,solver="RK45")
+   
+   
+    #parasites,cross_im,coi,diversity,evenness =shannon_diversity(sol,p['n_strains'])
+
+    #plots.figTSeries(sol, coi, diversity,evenness,p,f_name='ODE_tseries_persistence_single8.png')
+
+
+    # print(np.array(sol.persister_t).astype('int'))
+    # # print(sol.persister_y)
+
+    # # Call plotting of figure 1
+    
+    return sol
 
 
 
-def plot_results(results):
-    # Placeholder for plotting logic
-    # This function can be expanded to visualize the results of the simulations
-    pass

@@ -1,4 +1,5 @@
 import seaborn as sns # for plots
+from utils import shannon_diversity
 import matplotlib.pyplot as plt
 import matplotlib.colors as mlc
 import numpy as np
@@ -59,8 +60,9 @@ def figTSeries(sol, coi, diversity, evenness, params, f_name='ODE_tseries.png'):
     handles, labels = [], []
     for ax in axs:
         for handle, label in zip(*ax.get_legend_handles_labels()):
-            handles.append(handle)
-            labels.append(label)
+            if label in ['P', 'Cross Immunity', 'COI', 'Shannon Diversity', 'Shannon Evenness']:
+                handles.append(handle)
+                labels.append(label)
     fig.legend(handles, labels, loc='upper left', bbox_to_anchor=(1, 0.5), frameon=False)
 
     plt.savefig(f_name, bbox_inches='tight')
@@ -141,6 +143,51 @@ def figTSeries_r(sol, diversity, evenness, r_values, params, f_name='ODE_tseries
             handles.append(handle)
             labels.append(label)
     fig.legend(handles, labels, loc='upper left', bbox_to_anchor=(1, 0.5), frameon=False)
+
+    plt.savefig(f_name, bbox_inches='tight')
+    plt.show()
+    
+    
+def plot_simulations(simulations, params, param_name, param_values, f_name='simulation_plot.png'):
+    
+    parasites_all = []
+    diversity_all = []
+    evenness_all = []
+    cross_im_all = []
+
+    fig, axs = plt.subplots(5, 1, figsize=(10, 15), sharex=True)
+    colors = plt.cm.viridis(np.linspace(0, 1, len(simulations)))  # Use the 'viridis' colormap
+
+    for i in range(len(simulations)):
+        sol = simulations[i][1]
+        parasites, cross_im, coi, diversity, evenness = shannon_diversity(sol, params['n_strains'])
+
+        parasites_all.append(parasites)
+        diversity_all.append(diversity)
+        evenness_all.append(evenness)
+        cross_im_all.append(cross_im)
+
+        time = sol.t
+
+        color = colors[i % len(colors)]  # Cycle through the colors
+        axs[0].plot(time, parasites, color=color)
+        axs[0].set_yscale('log')
+        axs[1].plot(time, cross_im, color=color)
+        axs[2].plot(time, coi, color=color)
+        axs[3].plot(time, diversity, color=color)
+        axs[4].plot(time, evenness, color=color)
+
+    axs[0].set_ylabel('Parasites')
+    axs[1].set_ylabel('Cross Immunity')
+    axs[2].set_ylabel('COI')
+    axs[3].set_ylabel('Diversity')
+    axs[4].set_ylabel('Evenness')
+    axs[4].set_xlabel('Time')
+
+    # Add a legend
+    handles = [plt.Line2D([0], [0], color=colors[i % len(colors)], lw=2) for i in range(len(simulations))]
+    labels = [f'{param_name}={param_values[i]:.6f}' for i in range(len(simulations))]
+    axs[0].legend(handles, labels, loc='center right', bbox_to_anchor=(1.25, 0.5), frameon=False)
 
     plt.savefig(f_name, bbox_inches='tight')
     plt.show()
