@@ -28,13 +28,12 @@ def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365)
     
     return params
 
-def sweep_mean_infections(params, mean_infections_list):
+def sweep_mean_infections( mean_infections_list):
     results = []
-    for mean_infections in mean_infections_list:
-        params = params.copy()
-        params['mean_infections_per_season'] = mean_infections
-        sol = solveModel(params)  
-        results.append((mean_infections, sol))
+    for i in mean_infections_list:
+        p = params(mean_infections_per_season=i)
+        sol = solveModel(p)  
+        results.append((i, sol))
     return results
 
 def sweep_parameters(params, parameter, values):
@@ -56,11 +55,11 @@ def runs(param,params,times):
             results.append((i, sol))
         return results
     elif param=='a':
-        exponents = np.arange(5, 7, 0.1)
+        exponents = np.arange(4, 8, 0.25)
         alpha_values = 7 * 10**(-exponents)
         for i in range(times):
             p = params.copy()
-            p['a'] = np.random.choice(alpha_values, p['n_strains'])
+            p['a'] = np.random.normal(alpha_values.mean(), alpha_values.std(), p['n_strains'])
             sol = solveModel(p)
             results.append((i, sol))
         return results
