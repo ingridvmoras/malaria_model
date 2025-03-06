@@ -10,13 +10,8 @@ cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73",
     # http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/#a-colorblind-friendly-palette
     # http://jfly.iam.u-tokyo.ac.jp/color/
 
-def figTSeries(sol, coi, diversity, evenness, params, f_name='ODE_tseries.png'):
-    """
-    This function makes a plot for Figure 1 by taking all the solution objects
-    as arguments, and prints out the plot to a file.
-    Arguments:
-        sol : solution object taken from solver output
-    """
+def figTSeries(sol, coi, diversity, evenness, params, f_name='plots/ODE_tseries.png'):
+ 
 
     t = sol.t[:]  # get time values
 
@@ -70,7 +65,7 @@ def figTSeries(sol, coi, diversity, evenness, params, f_name='ODE_tseries.png'):
     plt.show()
 
 
-def figTSeries_r(sol, diversity, evenness, r_values, params, f_name='ODE_tseries.png'):
+def figTSeries_r(sol, diversity, evenness, r_values, params, f_name='plots/ODE_tseries.png'):
     """
     This function makes a plot for Figure 1 by taking all the solution objects
     as arguments, and prints out the plot to a file.
@@ -149,7 +144,7 @@ def figTSeries_r(sol, diversity, evenness, r_values, params, f_name='ODE_tseries
     plt.show()
     
     
-def plot_simulations(simulations, params, param_name, param_values, f_name='simulation_plot.png'):
+def plot_simulations(simulations, params, param_name, param_values, f_name='plots/simulation_plot.png'):
     
     parasites_all = []
     diversity_all = []
@@ -187,7 +182,7 @@ def plot_simulations(simulations, params, param_name, param_values, f_name='simu
 
     # Add a legend
     handles = [plt.Line2D([0], [0], color=colors[i % len(colors)], lw=2) for i in range(len(simulations))]
-    labels = [f'{param_values[i]:.2e}' for i in range(len(simulations))]
+    labels = [f'{param_values[i]:.3e}' for i in range(len(simulations))]
     axs[0].legend(handles, labels, loc='center right', bbox_to_anchor=(1.25, 0.5), frameon=False, title=param_name)
 
     plt.savefig(f_name, bbox_inches='tight')
@@ -197,7 +192,8 @@ def normal_distributions(distributions):
     colors = plt.cm.viridis(np.linspace(0, 1, len(distributions['simulation'].unique()))).tolist()
 
     chart = sns.displot(data=distributions, x='a', hue='simulation', kind='kde', fill=False, palette=colors, height=5, aspect=1.5)
-    
-    new_title = 'Simulation'
-    chart._legend.set_title(new_title)
 
+    chart._legend.set_title('Simulation')
+    
+    plt.savefig('plots/normal_distributions.png', bbox_inches='tight')
+    plt.show()

@@ -14,19 +14,23 @@ p= params()
      
 # First simulation: r is a value in a uniform distribution between 0.5 to 1
 r_values_uniform = np.log(np.sort(np.random.uniform(1, 14, 10)))/2
+print('Calculating simulation 1')
 s1= sweep_parameters(p,'r',r_values_uniform)
-    
-# Second simulation: r is a randomly picked value in the same uniform distribution for each n_strain
 
+# Second simulation: r is a randomly picked value in the same uniform distribution for each n_strain
+print('Calculating simulation 2')
 s2= runs('r',p,10)
 
 #Third simulation: alpha is a value between 7e- 5to 7e-7 
 exponents = np.arange(4, 8, 0.25)
 alpha_values = 7 * 10**(-exponents)
+print('Calculating simulation 3')
 s3= sweep_parameters(p,'a',alpha_values)
 
 
 #Fourth simulation: alpha is randomly picked value from a normal distribution for each n_strain
+
+print('Calculating simulation 4')
 s41= runs_a(p,10) #uniforme
 s4,distributions= runs_a(p,10,'normal',1*(10**-4))
 
@@ -34,6 +38,7 @@ s4,distributions= runs_a(p,10,'normal',1*(10**-4))
 #Changing mean infection times 
 
 mean_infections=np.round(np.linspace(1,10,10))
+print('Calculating simulation 5')
 s5=sweep_mean_infections(mean_infections)
 
 # Plot the simulations
@@ -47,4 +52,5 @@ plots.plot_simulations(s5, p, 'mean infections', mean_infections, f_name='simula
 
 parasites,cross_im,coi,shannon_diversity,shannon_evenness= shannon_diversity(s4[5][1],p['n_strains'])
 plots.figTSeries(s4[5][1],coi, shannon_diversity, shannon_evenness, p)
+distributions['simulation'] = round(distributions['simulation'])
 plots.normal_distributions(distributions)

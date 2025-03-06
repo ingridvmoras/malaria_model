@@ -1,6 +1,7 @@
 from ODE_Solver_persistence import initCond, odeSolver, odeFunNoLimitImmunity
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 np.random.seed(19680801)
 def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365):
@@ -31,7 +32,7 @@ def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365)
 
 def sweep_mean_infections( mean_infections_list):
     results = []
-    for i in mean_infections_list:
+    for i in tqdm(mean_infections_list):
         p = params(mean_infections_per_season=i)
         sol = solveModel(p)  
         results.append((i, sol))
@@ -39,7 +40,7 @@ def sweep_mean_infections( mean_infections_list):
 
 def sweep_parameters(params, parameter, values):
     results = []
-    for value in values:
+    for value in tqdm(values):
         params = params.copy()
         params[parameter] = value
         sol = solveModel(params)  
@@ -49,7 +50,7 @@ def sweep_parameters(params, parameter, values):
 def runs(param,params,times):
     results= []
     if param=='r':
-        for i in range(times):
+        for i in tqdm(range(times)):
             p= params.copy()
             p['r'] = np.log(np.random.uniform(1, 14, p['n_strains']))/2
             sol= solveModel(p)
@@ -63,7 +64,7 @@ def runs_a(params, times, distribution='uniform', sd=1):
     if distribution=='normal':
     
         distributions=[] 
-        for i in range(times): 
+        for i in tqdm(range(times)): 
             p = params.copy()
             p['a'] = np.abs(np.random.normal(7 * (10**-6), sd, p['n_strains']))
             sol = solveModel(p)
@@ -77,9 +78,9 @@ def runs_a(params, times, distribution='uniform', sd=1):
     else: 
         
         distributions=[]
-        for i in range(times):
+        for i in tqdm(range(times)):
             p = params.copy()
-            p['a'] = np.random.uniform(7 * (10**-7), 7 * (10**-5), p['n_strains'])
+            p['a'] = np.abs(np.random.uniform(7 * (10**-7), 7 * (10**-5), p['n_strains']))
             sol = solveModel(p)
             results.append((i+1, sol))
         return results
