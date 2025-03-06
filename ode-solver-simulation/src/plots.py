@@ -1,8 +1,12 @@
+import os
 import seaborn as sns # for plots
 from utils import shannon_diversity
 import matplotlib.pyplot as plt
-import matplotlib.colors as mlc
 import numpy as np
+
+d_name = 'malaria_model/plots'
+os.makedirs(os.path.dirname(d_name), exist_ok=True)
+
 sns.set_style("ticks") # make pwetty plots
 cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73",
               "#F0E442", "#0072B2", "#D55E00", "#CC79A7",
@@ -10,7 +14,7 @@ cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73",
     # http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/#a-colorblind-friendly-palette
     # http://jfly.iam.u-tokyo.ac.jp/color/
 
-def figTSeries(sol, coi, diversity, evenness, params, f_name='plots/ODE_tseries.png'):
+def figTSeries(sol, coi, diversity, evenness, params, f_name='ODE_tseries.png'):
  
 
     t = sol.t[:]  # get time values
@@ -61,11 +65,11 @@ def figTSeries(sol, coi, diversity, evenness, params, f_name='plots/ODE_tseries.
                 labels.append(label)
     fig.legend(handles, labels, loc='upper left', bbox_to_anchor=(1, 0.5), frameon=False)
 
-    plt.savefig(f_name, bbox_inches='tight')
+    plt.savefig(os.path.join(d_name, f_name), bbox_inches='tight')
     plt.show()
 
 
-def figTSeries_r(sol, diversity, evenness, r_values, params, f_name='plots/ODE_tseries.png'):
+def figTSeries_r(sol, diversity, evenness, r_values, params, f_name='malaria_model/plots/ODE_tseries.png'):
     """
     This function makes a plot for Figure 1 by taking all the solution objects
     as arguments, and prints out the plot to a file.
@@ -140,11 +144,11 @@ def figTSeries_r(sol, diversity, evenness, r_values, params, f_name='plots/ODE_t
             labels.append(label)
     fig.legend(handles, labels, loc='upper left', bbox_to_anchor=(1, 0.5), frameon=False)
 
-    plt.savefig(f_name, bbox_inches='tight')
+    plt.savefig(os.path.join(d_name, f_name), bbox_inches='tight')
     plt.show()
     
     
-def plot_simulations(simulations, params, param_name, param_values, f_name='plots/simulation_plot.png'):
+def plot_simulations(simulations, params, param_name, param_values, f_name='malaria_model/plots/simulation_plot.png'):
     
     parasites_all = []
     diversity_all = []
@@ -152,7 +156,8 @@ def plot_simulations(simulations, params, param_name, param_values, f_name='plot
     cross_im_all = []
 
     fig, axs = plt.subplots(5, 1, figsize=(10, 15), sharex=True)
-    colors = plt.cm.viridis(np.linspace(0, 1, len(simulations)))  # Use the 'viridis' colormap
+    fig, axs = plt.subplots(5, 1, figsize=(10, 15), sharex=True)
+    fig.suptitle('Simulation Results')
 
     for i in range(len(simulations)):
         sol = simulations[i][1]
@@ -185,7 +190,7 @@ def plot_simulations(simulations, params, param_name, param_values, f_name='plot
     labels = [f'{param_values[i]:.3e}' for i in range(len(simulations))]
     axs[0].legend(handles, labels, loc='center right', bbox_to_anchor=(1.25, 0.5), frameon=False, title=param_name)
 
-    plt.savefig(f_name, bbox_inches='tight')
+    plt.savefig(os.path.join(d_name, f_name), bbox_inches='tight')
     plt.show()
     
 def normal_distributions(distributions):
@@ -195,5 +200,5 @@ def normal_distributions(distributions):
 
     chart._legend.set_title('Simulation')
     
-    plt.savefig('plots/normal_distributions.png', bbox_inches='tight')
+    plt.savefig(os.path.join('malaria_model/plots/ODE_tseries.png'), bbox_inches='tight')
     plt.show()

@@ -70,7 +70,7 @@ def runs_a(params, times, distribution='uniform', sd=1):
             sol = solveModel(p)
             results.append((i+1, sol))
             for a_value in p['a']:
-                distributions.append((i, a_value))
+                distributions.append((i+1, a_value))
         df = pd.DataFrame(distributions, columns=['simulation', 'a'])
         return results, df
     
