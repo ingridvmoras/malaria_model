@@ -3,9 +3,10 @@ from utils import shannon_diversity
 import matplotlib.pyplot as plt
 import matplotlib.colors as mlc
 import numpy as np
-sns.set_style("white") # make pwetty plots
+sns.set_style("ticks") # make pwetty plots
 cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73",
-              "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
+              "#F0E442", "#0072B2", "#D55E00", "#CC79A7",
+              "#8E44AD", "#2ECC71"]
     # http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/#a-colorblind-friendly-palette
     # http://jfly.iam.u-tokyo.ac.jp/color/
 
@@ -186,8 +187,17 @@ def plot_simulations(simulations, params, param_name, param_values, f_name='simu
 
     # Add a legend
     handles = [plt.Line2D([0], [0], color=colors[i % len(colors)], lw=2) for i in range(len(simulations))]
-    labels = [f'{param_name}={param_values[i]:.6f}' for i in range(len(simulations))]
-    axs[0].legend(handles, labels, loc='center right', bbox_to_anchor=(1.25, 0.5), frameon=False)
+    labels = [f'{param_values[i]:.2e}' for i in range(len(simulations))]
+    axs[0].legend(handles, labels, loc='center right', bbox_to_anchor=(1.25, 0.5), frameon=False, title=param_name)
 
     plt.savefig(f_name, bbox_inches='tight')
     plt.show()
+    
+def normal_distributions(distributions):
+    colors = plt.cm.viridis(np.linspace(0, 1, len(distributions['simulation'].unique()))).tolist()
+
+    chart = sns.displot(data=distributions, x='a', hue='simulation', kind='kde', fill=False, palette=colors, height=5, aspect=1.5)
+    
+    new_title = 'Simulation'
+    chart._legend.set_title(new_title)
+

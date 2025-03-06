@@ -1,7 +1,8 @@
 from ODE_Solver_persistence import initCond, odeSolver, odeFunNoLimitImmunity
 import numpy as np
+import pandas as pd
 
-
+np.random.seed(19680801)
 def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365):
 
     """
@@ -52,17 +53,38 @@ def runs(param,params,times):
             p= params.copy()
             p['r'] = np.log(np.random.uniform(1, 14, p['n_strains']))/2
             sol= solveModel(p)
-            results.append((i, sol))
-        return results
-    elif param=='a':
-        exponents = np.arange(4, 8, 0.25)
-        alpha_values = 7 * 10**(-exponents)
+            results.append((i+1, sol))
+    return results
+    
+def runs_a(params, times, distribution='uniform', sd=1):
+    results= []
+   
+    
+    if distribution=='normal':
+    
+        distributions=[] 
+        for i in range(times): 
+            p = params.copy()
+            p['a'] = np.abs(np.random.normal(7 * (10**-6), sd, p['n_strains']))
+            sol = solveModel(p)
+            results.append((i+1, sol))
+            for a_value in p['a']:
+                distributions.append((i, a_value))
+        df = pd.DataFrame(distributions, columns=['simulation', 'a'])
+        return results, df
+    
+    
+    else: 
+        
+        distributions=[]
         for i in range(times):
             p = params.copy()
-            p['a'] = np.random.normal(alpha_values.mean(), alpha_values.std(), p['n_strains'])
+            p['a'] = np.random.uniform(7 * (10**-7), 7 * (10**-5), p['n_strains'])
             sol = solveModel(p)
-            results.append((i, sol))
+            results.append((i+1, sol))
         return results
+    
+        
 
 def shannon_diversity(sol,n_strains):
     parasites = np.array(sol.y[0:n_strains, :].sum(axis=0))
