@@ -57,7 +57,7 @@ def runs(param,params,times):
             results.append((i+1, sol))
     return results
     
-def runs_a(params, times, distribution='uniform', sd=1):
+def runs_a(params, times, distribution='uniform', sd=[1]):
     results= []
    
     
@@ -66,7 +66,7 @@ def runs_a(params, times, distribution='uniform', sd=1):
         distributions=[] 
         for i in tqdm(range(times)): 
             p = params.copy()
-            p['a'] = np.abs(np.random.normal(7 * (10**-6), sd, p['n_strains']))
+            p['a'] = np.abs(np.random.normal(7 * (10**-6), sd[0], p['n_strains']))
             sol = solveModel(p)
             results.append((i+1, sol))
             for a_value in p['a']:
@@ -74,6 +74,17 @@ def runs_a(params, times, distribution='uniform', sd=1):
         df = pd.DataFrame(distributions, columns=['simulation', 'a'])
         return results, df
     
+    elif distribution=='multiNorm':
+        distributions=[] 
+        for i in tqdm(range(len(sd))): 
+            p = params.copy()
+            p['a'] = np.abs(np.random.normal(7 * (10**-6), sd[i], p['n_strains']))
+            sol = solveModel(p) 
+            results.append((sd[i], sol))
+            for a_value in p['a']:
+                distributions.append((i+1, a_value))
+        df = pd.DataFrame(distributions, columns=['simulation', 'a'])
+        return results, df
     
     else: 
         
@@ -83,6 +94,8 @@ def runs_a(params, times, distribution='uniform', sd=1):
             p['a'] = np.abs(np.random.uniform(7 * (10**-7), 7 * (10**-5), p['n_strains']))
             sol = solveModel(p)
             results.append((i+1, sol))
+            for a_value in p['a']:
+                distributions.append((i+1, a_value))
         return results
     
         

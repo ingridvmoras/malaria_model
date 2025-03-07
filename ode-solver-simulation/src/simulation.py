@@ -32,7 +32,10 @@ s3= sweep_parameters(p,'a',alpha_values)
 
 print('Calculating simulation 4')
 s41= runs_a(p,10) #uniforme
-s4,distributions= runs_a(p,10,'normal',1*(10**-4))
+s4,distributions= runs_a(p,10,'normal',[1*(10**-4)])
+sd_values = [1, 10**(-1), 10**(-2),10**(-3),10**(-4),10**(-5),10**(-6),10**(-7),10**(-8),10**(-9)]
+s42,distributions2= runs_a(p,10,'multiNorm',sd_values)
+
 
 
 #Changing mean infection times 
@@ -42,15 +45,20 @@ print('Calculating simulation 5')
 s5=sweep_mean_infections(mean_infections)
 
 # Plot the simulations
-plots.plot_simulations(s1, p, 'r', r_values_uniform, f_name='simulation_plot_s1.png')
-plots.plot_simulations(s2, p, 'r', [s2[i][0] for i in range(len(s2))], f_name='simulation_plot_s2.png')
-plots.plot_simulations(s3, p, 'a', alpha_values, f_name='simulation_plot_s3.png')
-plots.plot_simulations(s4, p, 'a', [s4[i][0] for i in range(len(s4))], f_name='simulation_plot_s4.png')
-plots.plot_simulations(s41, p, 'a', [s41[i][0] for i in range(len(s41))], f_name='simulation_plot_s41.png')
-plots.plot_simulations(s5, p, 'mean infections', mean_infections, f_name='simulation_plot_s5.png')
+df1=plots.plot_simulations(s1, p, 'r', r_values_uniform, f_name='simulation_plot_s1.png')
+df2=plots.plot_simulations(s2, p, 'r', [s2[i][0] for i in range(len(s2))], f_name='simulation_plot_s2.png')
+df3=plots.plot_simulations(s3, p, 'a', alpha_values, f_name='simulation_plot_s3.png')
+df4=plots.plot_simulations(s4, p, 'a', [s4[i][0] for i in range(len(s4))], f_name='simulation_plot_s4.png')
+df5=plots.plot_simulations(s41, p, 'a', [s41[i][0] for i in range(len(s41))], f_name='simulation_plot_s41.png')
+df6=plots.plot_simulations(s42, p, 'sd', sd_values, f_name='simulation_plot_s42.png')
+df7=plots.plot_simulations(s5, p, 'mean infections', mean_infections, f_name='simulation_plot_s5.png')
 #Analysis 
 
 parasites,cross_im,coi,shannon_diversity,shannon_evenness= shannon_diversity(s4[5][1],p['n_strains'])
 plots.figTSeries(s4[5][1],coi, shannon_diversity, shannon_evenness, p)
 distributions['simulation'] = round(distributions['simulation'])
 plots.normal_distributions(distributions)
+
+
+
+

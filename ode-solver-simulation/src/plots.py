@@ -3,9 +3,10 @@ import seaborn as sns # for plots
 from utils import shannon_diversity
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
-d_name = 'malaria_model/plots'
-os.makedirs(os.path.dirname(d_name), exist_ok=True)
+d_name = os.path.join(os.path.dirname(__file__), 'plots')
+os.makedirs(d_name, exist_ok=True)
 
 sns.set_style("ticks") # make pwetty plots
 cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73",
@@ -15,7 +16,9 @@ cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73",
     # http://jfly.iam.u-tokyo.ac.jp/color/
 
 def figTSeries(sol, coi, diversity, evenness, params, f_name='ODE_tseries.png'):
- 
+    # Ensure the directory exists
+    if os.path.dirname(f_name):
+        os.makedirs(os.path.dirname(f_name), exist_ok=True)
 
     t = sol.t[:]  # get time values
 
@@ -69,13 +72,10 @@ def figTSeries(sol, coi, diversity, evenness, params, f_name='ODE_tseries.png'):
     plt.show()
 
 
-def figTSeries_r(sol, diversity, evenness, r_values, params, f_name='malaria_model/plots/ODE_tseries.png'):
-    """
-    This function makes a plot for Figure 1 by taking all the solution objects
-    as arguments, and prints out the plot to a file.
-    Arguments:
-        sol : solution object taken from solver output
-    """
+def figTSeries_r(sol, diversity, evenness, r_values, params, f_name='ODE_tseries.png'):
+    # Ensure the directory exists
+    if os.path.dirname(f_name):
+        os.makedirs(os.path.dirname(f_name), exist_ok=True)
 
     t = sol.t[:]  # get time values
 
@@ -144,29 +144,40 @@ def figTSeries_r(sol, diversity, evenness, r_values, params, f_name='malaria_mod
             labels.append(label)
     fig.legend(handles, labels, loc='upper left', bbox_to_anchor=(1, 0.5), frameon=False)
 
-    plt.savefig(os.path.join(d_name, f_name), bbox_inches='tight')
+    plt.savefig(f_name, bbox_inches='tight')
     plt.show()
     
     
-def plot_simulations(simulations, params, param_name, param_values, f_name='malaria_model/plots/simulation_plot.png'):
+def plot_simulations(simulations, params, param_name, param_values, f_name='simulation_plot.png'):
+    f_name = os.path.join(d_name, f_name)
+    if os.path.dirname(f_name):
+        os.makedirs(os.path.dirname(f_name), exist_ok=True)
     
     parasites_all = []
     diversity_all = []
     evenness_all = []
     cross_im_all = []
+    coi_all=[]
+    simulation=[]
+    times=[]
 
-    fig, axs = plt.subplots(5, 1, figsize=(10, 15), sharex=True)
-    fig, axs = plt.subplots(5, 1, figsize=(10, 15), sharex=True)
-    fig.suptitle('Simulation Results')
+    colors = plt.cm.viridis(np.linspace(0, 1, len(simulations)))  # Use the 'viridis' colormap
+    _, axs = plt.subplots(5, 1, figsize=(10, 15), sharex=True)
+    
 
     for i in range(len(simulations)):
         sol = simulations[i][1]
         parasites, cross_im, coi, diversity, evenness = shannon_diversity(sol, params['n_strains'])
-
-        parasites_all.append(parasites)
-        diversity_all.append(diversity)
-        evenness_all.append(evenness)
-        cross_im_all.append(cross_im)
+        for j in range(len(parasites)):
+            parasites_all.append(parasites[j])
+            diversity_all.append(diversity[j])
+            evenness_all.append(evenness[j])
+            cross_im_all.append(cross_im[j])
+            coi_all.append(coi[j])
+            simulation.append(simulations[i][0])
+            times.append(sol.t[i])
+        
+        
 
         time = sol.t
 
@@ -187,18 +198,34 @@ def plot_simulations(simulations, params, param_name, param_values, f_name='mala
 
     # Add a legend
     handles = [plt.Line2D([0], [0], color=colors[i % len(colors)], lw=2) for i in range(len(simulations))]
-    labels = [f'{param_values[i]:.3e}' for i in range(len(simulations))]
+    labels = [f'{param_values[i]}' for i in range(len(simulations))] #:.2e
     axs[0].legend(handles, labels, loc='center right', bbox_to_anchor=(1.25, 0.5), frameon=False, title=param_name)
-
-    plt.savefig(os.path.join(d_name, f_name), bbox_inches='tight')
+     
+    parameter= [param_name]*len(parasites_all)
+    
+    df = pd.DataFrame({
+        'parameter': [param_name] * len(parasites_all),
+        'parasites': parasites_all,
+        'diversity': diversity_all,
+        'evenness': evenness_all,
+        'cross_immunity': cross_im_all,
+        'coi': coi_all, 
+        'simulation': simulation,
+        'times': times
+    })
+    
+    plt.savefig(f_name, bbox_inches='tight')
     plt.show()
+    return df
     
 def normal_distributions(distributions):
     colors = plt.cm.viridis(np.linspace(0, 1, len(distributions['simulation'].unique()))).tolist()
 
     chart = sns.displot(data=distributions, x='a', hue='simulation', kind='kde', fill=False, palette=colors, height=5, aspect=1.5)
-
+    
     chart._legend.set_title('Simulation')
     
-    plt.savefig(os.path.join('malaria_model/plots/ODE_tseries.png'), bbox_inches='tight')
+    plt.savefig(os.path.join('plots\\normal_distributions.png'), bbox_inches='tight')
     plt.show()
+    
+    
