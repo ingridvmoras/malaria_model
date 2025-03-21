@@ -66,7 +66,7 @@ def runs_a(params, times, distribution='uniform', sd=[1]):
         distributions=[] 
         for i in tqdm(range(times)): 
             p = params.copy()
-            p['a'] = np.abs(np.random.normal(7 * (10**-6), sd[0], p['n_strains']))
+            p['a'] = np.random.normal(7 * (10**-6), sd[0], p['n_strains'])
             sol = solveModel(p)
             results.append((i+1, sol))
             for a_value in p['a']:
@@ -78,7 +78,7 @@ def runs_a(params, times, distribution='uniform', sd=[1]):
         distributions=[] 
         for i in tqdm(range(len(sd))): 
             p = params.copy()
-            p['a'] = np.abs(np.random.normal(7 * (10**-6), sd[i], p['n_strains']))
+            p['a'] = np.random.normal(7 * (10**-6), sd[i], p['n_strains'])
             sol = solveModel(p) 
             results.append((sd[i], sol))
             for a_value in p['a']:
@@ -98,7 +98,33 @@ def runs_a(params, times, distribution='uniform', sd=[1]):
                 distributions.append((i+1, a_value))
         return results
     
-        
+def sweep_inf_alpha(param1, values1, values2):
+    results = []
+    for value1 in tqdm(values1):
+        p = params(mean_infections_per_season=value1)
+        for value2 in values2:
+            p = p.copy()
+            p[param1] = value2
+            sol = solveModel(p)
+            results.append((value1, value2, sol))
+    return results
+
+def mixed_results(results):
+    data = []
+    for value1, value2, sol in results:
+        parasites, cross_im, coi, diversity, evenness = shannon_diversity(sol, sol.y.shape[0] - 1)
+        for i in range(len(parasites)):
+            data.append({
+                'mean_infections': value1,
+                'a': value2,
+                'parasites': parasites[i],
+                'coi': coi[i],
+                'diversity': diversity[i],
+                'evenness': evenness[i],
+                'cross_im': cross_im[i]
+            })
+    df = pd.DataFrame(data)
+    return df
 
 def shannon_diversity(sol,n_strains):
     parasites = np.array(sol.y[0:n_strains, :].sum(axis=0))

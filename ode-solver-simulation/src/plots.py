@@ -175,7 +175,7 @@ def plot_simulations(simulations, params, param_name, param_values, f_name='simu
             cross_im_all.append(cross_im[j])
             coi_all.append(coi[j])
             simulation.append(simulations[i][0])
-            times.append(sol.t[i])
+            times.append(sol.t[j])
         
         
 
