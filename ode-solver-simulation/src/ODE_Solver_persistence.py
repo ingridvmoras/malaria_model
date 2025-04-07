@@ -177,7 +177,7 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
 
     # default settings for the solver
     options = { 'RelTol':10.**-8,'AbsTol':10.**-8 }
-    min_state_var = 1e-2
+    min_state_var = 2e-5
 
     # takes any keyword arguments, and updates options
     options.update(kwargs)
@@ -200,16 +200,34 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
     y_out.persister_y = []
     y_out.non_persister_t = []
     y_out.non_persister_y = []
+    
 
-    if y_out.t[-1]-y_out.t[0] >= p['year_duration'] - p['t_dry']:
-        t_last_dry = np.floor( y_out.t[0] / p['year_duration'] ) * p['year_duration'] + p['t_dry']
-        t_last_dry_start_i = np.argmin( y_out.t < t_last_dry )
-        if y_out.y[0:p['n_strains'],-1].max() > min_state_var:
-            y_out.persister_t.append(y_out.t[t_last_dry_start_i])
-            y_out.persister_y.append(y_out.y[:,t_last_dry_start_i])
+    if y_out.t[-1] - y_out.t[0] >= p['year_duration'] - p['t_dry']:
+       
+        if y_out.t[0] < p['year_duration']:
+            t_last_wet = p['t_dry'] - 1
+            t_last_dry = p['year_duration'] - 1
         else:
-            y_out.non_persister_t.append(y_out.t[t_last_dry_start_i])
-            y_out.non_persister_y.append(y_out.y[:,t_last_dry_start_i])
+            t_last_wet = np.floor(y_out.t[0] / p['year_duration']) * p['year_duration'] + p['t_dry'] - 1
+            t_last_dry = np.floor(y_out.t[0] / p['year_duration']) * p['year_duration'] + p['year_duration'] - 1
+
+        t_last_wet_i = np.argmin(np.abs(y_out.t - t_last_wet))
+        t_last_dry_i = np.argmin(np.abs(y_out.t - t_last_dry))
+        
+        if y_out.y[0:p['n_strains'], -1].max() > min_state_var:
+           
+            y_out.persister_t.append(y_out.t[t_last_dry_i])
+            y_out.persister_y.append(y_out.y[:, t_last_dry_i])
+
+            y_out.persister_t.append(y_out.t[t_last_wet_i])
+            y_out.persister_y.append(y_out.y[:, t_last_wet_i])
+        else:
+          
+            y_out.non_persister_t.append(y_out.t[t_last_dry_i])
+            y_out.non_persister_y.append(y_out.y[:, t_last_dry_i])
+
+            y_out.non_persister_t.append(y_out.t[t_last_wet_i])
+            y_out.non_persister_y.append(y_out.y[:, t_last_wet_i])
 
     for inf_evt in range(p['n_strains']-1):
         new_y0 = np.maximum( y_out.y[:,-1],0 ).flatten()
@@ -228,35 +246,41 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
                 # atol=atol # absolute tolerance value
             )
 
-        # print(y_next.y[0:p['n_strains'],-1].max() > min_state_var)
-        # print( y_next.t[-1]-y_next.t[0] >= p['year_duration'] - p['t_dry'])
-        # print( inf_evt == p['n_strains']-2)
         if not inf_evt == p['n_strains']-2 and len(y_next.t) > 0 and y_next.t[-1]-y_next.t[0] >= p['year_duration'] - p['t_dry']:
-            t_last_dry = np.floor( y_next.t[0] / p['year_duration'] ) * p['year_duration'] + p['t_dry']
-            t_last_dry_start_i = np.argmin( y_next.t < t_last_dry )
-            if y_next.y[0:p['n_strains'],-1].max() > min_state_var:
-                y_out.persister_t.append(y_next.t[t_last_dry_start_i])
-                y_out.persister_y.append(y_next.y[:,t_last_dry_start_i])
+            if y_next.t[0] < p['year_duration']:
+                t_last_wet = p['t_dry'] - 1
+                t_last_dry = p['year_duration'] - 1
             else:
-                y_out.non_persister_t.append(y_next.t[t_last_dry_start_i])
-                y_out.non_persister_y.append(y_next.y[:,t_last_dry_start_i])
+                t_last_wet = np.floor(y_next.t[0] / p['year_duration']) * p['year_duration'] + p['t_dry'] - 1
+                t_last_dry = np.floor(y_next.t[0] / p['year_duration']) * p['year_duration'] + p['year_duration'] - 1
 
+            t_last_wet_i = np.argmin(np.abs(y_next.t - t_last_wet))
+            t_last_dry_i = np.argmin(np.abs(y_next.t - t_last_dry))
+
+            if y_next.y[0:p['n_strains'], -1].max() > min_state_var:
+                y_out.persister_t.append(y_next.t[t_last_dry_i])
+                y_out.persister_y.append(y_next.y[:, t_last_dry_i])
+
+                y_out.persister_t.append(y_next.t[t_last_wet_i])
+                y_out.persister_y.append(y_next.y[:, t_last_wet_i])
+            else:
+                y_out.non_persister_t.append(y_next.t[t_last_dry_i])
+                y_out.non_persister_y.append(y_next.y[:, t_last_dry_i])
+
+                y_out.non_persister_t.append(y_next.t[t_last_wet_i])
+                y_out.non_persister_y.append(y_next.y[:, t_last_wet_i])
+                
+                
         y_out.t = np.concatenate([y_out.t,y_next.t])
         if len(y_next.y)>0:
             if y_next.y.ndim == 1:
-                print(y_next.y.shape)
                 y_next.y = y_next.y.transpose()
 
             y_out.y = np.concatenate([y_out.y,y_next.y],axis=1)
 
-
     y_out.y = ( y_out.y > min_state_var/10 ) * y_out.y
     y_out.persister_y = ( np.array(y_out.persister_y) > min_state_var/10 ) * np.array(y_out.persister_y)
-    # print(y_out.persister_y.shape)
     y_out.non_persister_y = ( np.array(y_out.non_persister_y) > min_state_var/10 ) * np.array(y_out.non_persister_y)
-    # print(y_out.non_persister_y.shape)
-    # np.savetxt("y_out_persister_y.csv", y_out.persister_y, delimiter=",")
-    # np.savetxt("y_out.y.csv", y_out.y, delimiter=",")
 
     if persister_out:
         persister = pd.DataFrame(columns=['Time','Parasites','COI','Diversity','Evenness','Cross immunity','Persister'])
@@ -264,7 +288,7 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
             persister['Time'] = y_out.persister_t
             persister['Parasites'] = y_out.persister_y[:,0:p['n_strains']].sum(axis=1)
             persister['COI'] = np.array( y_out.persister_y[:,0:p['n_strains']] > 0 ).sum(axis=1)
-            frac = y_out.persister_y[:,0:p['n_strains']] / np.maximum( np.tile( persister['Parasites'], (p['n_strains'],1) ).transpose(), 1 )
+            frac = y_out.persister_y[:,0:p['n_strains']] / np.maximum( np.tile( persister['Parasites'], (p['n_strains'],1) ).transpose(),  1e-10 )
             persister['Diversity'] = - np.sum( frac * np.log( np.maximum( frac,1e-10 ) ), 1 )
             persister['Evenness'] = persister['Diversity'] / np.log( np.maximum( persister['COI'],2 ) )
             persister['Cross immunity'] = y_out.persister_y[:,-1]
@@ -275,16 +299,16 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
             non_persister['Time'] = y_out.non_persister_t
             non_persister['Parasites'] = y_out.non_persister_y[:,0:p['n_strains']].sum(axis=1)
             non_persister['COI'] = np.array( y_out.non_persister_y[:,0:p['n_strains']] > 0 ).sum(axis=1)
-            frac = y_out.non_persister_y[:,0:p['n_strains']] / np.maximum( np.tile( non_persister['Parasites'], (p['n_strains'],1) ).transpose(), 1 )
+            frac = y_out.non_persister_y[:,0:p['n_strains']] / np.maximum( np.tile( non_persister['Parasites'], (p['n_strains'],1) ).transpose(),  1e-10)
             non_persister['Diversity'] = - np.sum( frac * np.log( np.maximum( frac,1e-10 ) ), 1 )
             non_persister['Evenness'] = non_persister['Diversity'] / np.log( np.maximum( non_persister['COI'],2 ) )
             non_persister['Cross immunity'] = y_out.non_persister_y[:,-1]
             non_persister['Persister'] = False
 
-        return pd.concat([persister,non_persister],ignore_index=True)
+
+        return y_out, pd.concat([persister,non_persister],ignore_index=True)
     else:
         return y_out
-    
 
 
 

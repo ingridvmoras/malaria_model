@@ -57,7 +57,7 @@ def runs(param,params,times):
             results.append((i+1, sol))
     return results
     
-def runs_a(params, times, distribution='uniform', sd=[1]):
+def runs_a(params, times, distribution='uniform', sd=[1],persister_out=False):
     results= []
    
     
@@ -67,36 +67,36 @@ def runs_a(params, times, distribution='uniform', sd=[1]):
         for i in tqdm(range(times)): 
             p = params.copy()
             p['a'] = np.random.normal(7 * (10**-6), sd[0], p['n_strains'])
-            sol = solveModel(p)
-            results.append((i+1, sol))
+            sol,df = solveModel(p,persister_out=persister_out)
+            results.append((i+1, df))
             for a_value in p['a']:
                 distributions.append((i+1, a_value))
-        df = pd.DataFrame(distributions, columns=['simulation', 'a'])
-        return results, df
+        ds = pd.DataFrame(distributions, columns=['simulation', 'a'])
+        return results, ds
     
     elif distribution=='multiNorm':
         distributions=[] 
         for i in tqdm(range(len(sd))): 
             p = params.copy()
             p['a'] = np.random.normal(7 * (10**-6), sd[i], p['n_strains'])
-            sol = solveModel(p) 
-            results.append((sd[i], sol))
+            sol,df = solveModel(p,persister_out=persister_out) 
+            results.append((sd[i], df))
             for a_value in p['a']:
                 distributions.append((i+1, a_value))
-        df = pd.DataFrame(distributions, columns=['simulation', 'a'])
-        return results, df
+        ds = pd.DataFrame(distributions, columns=['simulation', 'a'])
+        return results, ds
     
     else: 
         
         distributions=[]
         for i in tqdm(range(times)):
             p = params.copy()
-            p['a'] = np.abs(np.random.uniform(7 * (10**-7), 7 * (10**-5), p['n_strains']))
-            sol = solveModel(p)
+            p['a'] = np.random.uniform(7 * (10**-7), 7 * (10**-5), p['n_strains'])
+            sol = solveModel(p,persister_out=persister_out) 
             results.append((i+1, sol))
             for a_value in p['a']:
                 distributions.append((i+1, a_value))
-        return results
+        return results,df
     
 def sweep_inf_alpha(param1, values1, values2):
     results = []
@@ -138,7 +138,7 @@ def shannon_diversity(sol,n_strains):
     shannon_evenness = shannon_diversity / np.log(np.maximum(coi, 2))
     return parasites,cross_im,coi,shannon_diversity,shannon_evenness
 
-def solveModel(p=None):
+def solveModel(p=None,persister_out=False):
 
     '''
     Main method containing single solver and plotter calls.
@@ -154,9 +154,7 @@ def solveModel(p=None):
         # time vector based on minimum, maximum, and time step values
 
     # Solve model
-    sol = odeSolver(p['odeFun'],t,y_0,p,solver="RK45")
-   
-   
+ 
     #parasites,cross_im,coi,diversity,evenness =shannon_diversity(sol,p['n_strains'])
 
     #plots.figTSeries(sol, coi, diversity,evenness,p,f_name='ODE_tseries_persistence_single8.png')
@@ -167,7 +165,9 @@ def solveModel(p=None):
 
     # # Call plotting of figure 1
     
-    return sol
+    return odeSolver(p['odeFun'],t,y_0,p,solver="RK45",persister_out=persister_out)
+
+
 
 
 
