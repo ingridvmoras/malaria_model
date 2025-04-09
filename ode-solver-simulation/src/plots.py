@@ -237,7 +237,7 @@ def figDistributions(dat,params,f_name='ODE_persistence.png'):
     y_val = 'COI'
     # sns.catplot(data=dat, x="Persister", y=y_val, kind="violin", color=".9", inner='quartiles',ax=ax1)
     sns.violinplot(data=dat, x="Persister", y=y_val, color=".9", inner='quartiles' ,ax=ax1)
-    sns.swarmplot(data=dat, x="Persister",hue="Persister", y=y_val, size=0.25, palette=["#1f77b4", "#ff7f0e"],ax=ax1)
+    sns.swarmplot(data=dat, x="Persister",hue="Persister", y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"],ax=ax1)
     ax1.set_xlabel('Persistent infection \n(until next May)')
     ax1.set_ylabel('COI \nwithin each patient')
 
@@ -245,7 +245,7 @@ def figDistributions(dat,params,f_name='ODE_persistence.png'):
     y_val = 'Diversity'
     # sns.catplot(data=dat, x="Persister", y=y_val, kind="violin", color=".9", inner='quartiles',ax=ax2)
     sns.violinplot(data=dat, x="Persister", y=y_val, color=".9", inner='quartiles' ,ax=ax2)
-    sns.swarmplot(data=dat, x="Persister",hue="Persister", y=y_val, size=0.25, palette=["#1f77b4", "#ff7f0e"],ax=ax2)
+    sns.swarmplot(data=dat, x="Persister",hue="Persister", y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"],ax=ax2)
     ax2.set_xlabel('Persistent infection \n(until next May)')
     ax2.set_ylabel('Mean Shannon diversity \nwithin each patient')
 
@@ -253,7 +253,7 @@ def figDistributions(dat,params,f_name='ODE_persistence.png'):
     y_val = 'Evenness'
     # sns.catplot(data=dat, x="Persister", y=y_val, kind="violin", color=".9", inner='quartiles',ax=ax3)
     sns.violinplot(data=dat, x="Persister", y=y_val, color=".9", inner='quartiles' ,ax=ax3)
-    sns.swarmplot(data=dat, x="Persister", hue="Persister",y=y_val, size=0.25, palette=["#1f77b4", "#ff7f0e"],ax=ax3)
+    sns.swarmplot(data=dat, x="Persister", hue="Persister",y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"],ax=ax3)
     ax3.set_xlabel('Persistent infection \n(until next May)')
     ax3.set_ylabel('Mean Shannon evenness \nwithin each patient')
 

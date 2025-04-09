@@ -34,9 +34,9 @@ p= params()
 
 print('Calculating simulation 4')
 # s41= runs_a(p,10) #uniforme
-s4,distributions= runs_a(p,120,'normal',[1*(10**-6)],persister_out=True)
-sd_values = np.linspace( 1 * (10**-6)- (0.95 *1 * (10**-6) ), 1 * (10**-6)+ 1 * (10**-6), 120)
-s4_2, distributions2 = runs_a(p, 120, 'multiNorm', sd_values, persister_out=True)
+s4,distributions= runs_a(p,50,'normal',[1*(10**-6)],persister_out=True)
+sd_values = np.linspace( 1 * (10**-6)- (0.95 *1 * (10**-6) ), 1 * (10**-6)+ 1 * (10**-6), 50)
+s4_2, distributions2 = runs_a(p, 50, 'multiNorm', sd_values, persister_out=True)
 
 # Combine all dataframes into one dataframe with an ID column
 
@@ -57,8 +57,7 @@ for idx, (id, df) in enumerate(s4):
 
 
 
-plots.figDistributions(s4_2df,p,f_name='.\\plots\\ODE_persistence_s4_2.png')
-plots.figDistributions(s4_df,p,f_name='.\\plots\\ODE_persistence_s4.png')
+
 
 
 
