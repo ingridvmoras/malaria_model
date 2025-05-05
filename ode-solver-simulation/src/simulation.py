@@ -12,6 +12,7 @@ np.random.seed(19680801)
 
 p= params()
 
+
 # #Hypothesis: this should not effect on persistency  
      
 # # First simulation: r is a value in a uniform distribution between 0.5 to 1
@@ -32,58 +33,65 @@ p= params()
 
 # #Fourth simulation: alpha is randomly picked value from a normal distribution for each n_strain
 
-print('Calculating simulation 4')
+#print('Calculating simulation 4')
 # s41= runs_a(p,10) #uniforme
-s4,distributions= runs_a(p,50,'normal',[1*(10**-6)],persister_out=True)
-sd_values = np.linspace( 1 * (10**-6)- (0.95 *1 * (10**-6) ), 1 * (10**-6)+ 1 * (10**-6), 50)
-s4_2, distributions2 = runs_a(p, 50, 'multiNorm', sd_values, persister_out=True)
+#s4,distributions= runs_a(p,120,'normal',[1*(10**-6)],persister_out=True)
+#sd_values = np.linspace( 1 * (10**-6)- (0.75 *1 * (10**-6) ), 1 * (10**-6) + (0.75 *1 * (10**-6) ), 120)
+#s4_2, distributions2 = runs_a(p, 120, 'multiNorm', sd_values, persister_out=True)
 
-# Combine all dataframes into one dataframe with an ID column
+# Combine all dataframes into one dataframe with an ID column, the ID column is comparable with the kids ID
 
-s4_2df = pd.DataFrame()
+#normal = pd.DataFrame()
 
-for idx, (sd, df) in enumerate(s4_2):
-    df = df.copy()
-    df['sd'] = sd
-    df['ID'] = idx + 1  
-    s4_2df = pd.concat([s4_2df, df], ignore_index=True)
+# for idx, (sd, df) in enumerate(s4_2):
+#     df = df.copy()
+#     df['sd'] = sd
+#     df['ID'] = idx + 1  
+#     normal = pd.concat([normal, df], ignore_index=True)
     
-s4_df = pd.DataFrame()
+# multiNormal = pd.DataFrame()
 
-for idx, (id, df) in enumerate(s4):
-    df = df.copy()
-    df['ID'] = idx + 1
-    s4_df = pd.concat([s4_df, df], ignore_index=True)
+# for idx, (id, df) in enumerate(s4):
+#     df = df.copy()
+#     df['ID'] = idx + 1
+#     multiNormal = pd.concat([multiNormal, df], ignore_index=True)
 
+# d1= normal.copy()
+# d2= multiNormal.copy()
 
-
-
-
-
-
-
-#Changing mean infection times 
-
-#mean_infections=np.round(np.linspace(1,10,10))
-#print('Calculating simulation 5')
-#s5=sweep_mean_infections(mean_infections)
-
-# Plot the simulations
-# df1=plots.plot_simulations(s1, p, 'r', r_values_uniform, f_name='simulation_plot_s1.png')
-# df2=plots.plot_simulations(s2, p, 'r', [s2[i][0] for i in range(len(s2))], f_name='simulation_plot_s2.png')
-# df3=plots.plot_simulations(s3, p, 'a', alpha_values, f_name='simulation_plot_s3.png')
-#df4=plots.plot_simulations(s4, p, 'a', [s4[i][0] for i in range(len(s4))], f_name='simulation_plot_s4.png')
-# df5=plots.plot_simulations(s41, p, 'a', [s41[i][0] for i in range(len(s41))], f_name='simulation_plot_s41.png')
-#df6=plots.plot_simulations(s42, p, 'sd', sd_values, f_name='simulation_plot_s42.png')
-#df7=plots.plot_simulations(s5, p, 'mean infections', mean_infections, f_name='simulation_plot_s5.png')
+# normal = normal.groupby(["ID", "Persister"]).agg('mean').reset_index()
+# multiNormal = multiNormal.groupby(["ID", "Persister"]).agg('mean').reset_index()
 
 
-# parasites,cross_im,coi,shannon_diversity,shannon_evenness= shannon_diversity(s4[5][1],p['n_strains'])
-# plots.figTSeries(s4[5][1],coi, shannon_diversity, shannon_evenness, p)
-#distributions['simulation'] = round(distributions['simulation'])
-#plots.normal_distributions(distributions)
 
 
+
+# #Changing mean infection times 
+
+# #mean_infections=np.round(np.linspace(1,10,10))
+# #print('Calculating simulation 5')
+# #s5=sweep_mean_infections(mean_infections)
+
+# # Plot the simulations
+# # df1=plots.plot_simulations(s1, p, 'r', r_values_uniform, f_name='simulation_plot_s1.png')
+# # df2=plots.plot_simulations(s2, p, 'r', [s2[i][0] for i in range(len(s2))], f_name='simulation_plot_s2.png')
+# # df3=plots.plot_simulations(s3, p, 'a', alpha_values, f_name='simulation_plot_s3.png')
+# #df4=plots.plot_simulations(s4, p, 'a', [s4[i][0] for i in range(len(s4))], f_name='simulation_plot_alpha_normal.png')
+# #df5=plots.plot_simulations(s41, p, 'a', [s41[i][0] for i in range(len(s41))], f_name='simulation_plot_s41.png')
+# #df6=plots.plot_simulations(s4_2, p, 'sd', sd_values, f_name='simulation_plot_alpha_multiNo.png')
+# #df7=plots.plot_simulations(s5, p, 'mean infections', mean_infections, f_name='simulation_plot_s5.png')
+
+
+# #parasites,cross_im,coi,diversity,evenness= shannon_diversity(s4[5][1],p['n_strains'])
+# #plots.figTSeries(s4[5][1],coi, diversity, evenness, p)
+# distributions['simulation'] = round(distributions['simulation'])
+# plots.normal_distributions(distributions)
+# distributions2['simulation'] = round(distributions2['simulation'])
+# plots.normal_distributions(distributions2)
+
+
+# plots.figDistributions(normal, p, 'normal')
+# plots.figDistributions(multiNormal, p, 'multiNorm')
 
 
 

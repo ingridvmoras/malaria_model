@@ -41,8 +41,8 @@ def odeFunLimitImmunity(t,y,**kwargs):
 
     # Unpack variables passed through kwargs (see I thought I could avoid this
     # and I just made it messier)
-    a,g,d,r,K_s,K_c,n_strains = \
-        kwargs['a'],kwargs['g'],kwargs['d'],kwargs['r'],kwargs['K_s'],kwargs['K_c'],kwargs['n_strains']
+    a,g,d,e,r,K_s,K_c,n_strains = \
+        kwargs['a'],kwargs['g'],kwargs['d'],kwargs['e'],kwargs['r'],kwargs['K_s'],kwargs['K_c'],kwargs['n_strains']
 
     # P,S,C = y # unpack state variables
     P = y[0:n_strains]  # P contains the first n_strains elements of y
@@ -51,10 +51,8 @@ def odeFunLimitImmunity(t,y,**kwargs):
     # (state variable order matters for numerical solver)
 
     # ODEs
-    dP = ( r - S - C * P / P.sum() ) * P
-    # dS = a * ( 1 - S.sum() / K_s ) * P
-    # dC = g * ( 1 - C / K_c ) * P - d * C
-    dS = a * P * P / P.sum()
+    dP = ( r - S - C) * P
+    dS = a * P - e * S
     dC = g * P.sum() - d * C
 
     # Gather differential values in list (state variable order matters for
@@ -177,7 +175,7 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
 
     # default settings for the solver
     options = { 'RelTol':10.**-8,'AbsTol':10.**-8 }
-    min_state_var = 2e-5
+    min_state_var = 1e-2
 
     # takes any keyword arguments, and updates options
     options.update(kwargs)
@@ -204,7 +202,7 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
 
     if y_out.t[-1] - y_out.t[0] >= p['year_duration'] - p['t_dry']:
        
-        if y_out.t[0] < p['year_duration']:
+        if y_out.t[0] < p['year_duration']:#first year 
             t_last_wet = p['t_dry'] - 1
             t_last_dry = p['year_duration'] - 1
         else:
@@ -216,8 +214,8 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
         
         if y_out.y[0:p['n_strains'], -1].max() > min_state_var:
            
-            y_out.persister_t.append(y_out.t[t_last_dry_i])
-            y_out.persister_y.append(y_out.y[:, t_last_dry_i])
+            #y_out.persister_t.append(y_out.t[t_last_dry_i])
+            #y_out.persister_y.append(y_out.y[:, t_last_dry_i])
 
             y_out.persister_t.append(y_out.t[t_last_wet_i])
             y_out.persister_y.append(y_out.y[:, t_last_wet_i])
@@ -258,14 +256,14 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
             t_last_dry_i = np.argmin(np.abs(y_next.t - t_last_dry))
 
             if y_next.y[0:p['n_strains'], -1].max() > min_state_var:
-                y_out.persister_t.append(y_next.t[t_last_dry_i])
-                y_out.persister_y.append(y_next.y[:, t_last_dry_i])
+                #y_out.persister_t.append(y_next.t[t_last_dry_i])
+                #y_out.persister_y.append(y_next.y[:, t_last_dry_i])
 
                 y_out.persister_t.append(y_next.t[t_last_wet_i])
                 y_out.persister_y.append(y_next.y[:, t_last_wet_i])
             else:
-                y_out.non_persister_t.append(y_next.t[t_last_dry_i])
-                y_out.non_persister_y.append(y_next.y[:, t_last_dry_i])
+                #y_out.non_persister_t.append(y_next.t[t_last_dry_i])
+                #y_out.non_persister_y.append(y_next.y[:, t_last_dry_i])
 
                 y_out.non_persister_t.append(y_next.t[t_last_wet_i])
                 y_out.non_persister_y.append(y_next.y[:, t_last_wet_i])

@@ -229,6 +229,7 @@ def normal_distributions(distributions):
     plt.show()
     
 def figDistributions(dat,params,f_name='ODE_persistence.png'):
+    sns.set_style("ticks")
     # plt.figure(figsize=(6, 12), dpi=200) # make new figure
 
     fig, (ax1, ax2, ax3) = plt.subplots(1,3, figsize = (24, 6))
