@@ -28,8 +28,8 @@ def odeFunLimitImmunity(t, y, **kwargs):
     """
 
     # Unpack variables passed through kwargs
-    a, g, d, e, r, n_strains, sigma, sigma_C = \
-        kwargs['a'], kwargs['g'], kwargs['d'], kwargs['e'], kwargs['r'], kwargs['n_strains'], kwargs['sigma'], kwargs['sigma_C']
+    a, g, d, e, r, n_strains= \
+        kwargs['a'], kwargs['g'], kwargs['d'], kwargs['e'], kwargs['r'], kwargs['n_strains']
 
     # Unpack state variables
     P = y[0:n_strains]  # P contains the first n_strains elements of y
@@ -37,14 +37,11 @@ def odeFunLimitImmunity(t, y, **kwargs):
     C = y[-1]  # Last element is C
 
     t = round(t*10)
-    # Get the corresponding sigma value
-    sigma_t = sigma[t]
-    sigma_C = sigma_C[t]
 
     # ODEs
     dP = (r - S - C) * P
-    dS = sigma_t * (a * P) - e * S
-    dC = sigma_C*(g * P.sum()) - d * C
+    dS = (a * P) - e * S
+    dC = g * P.sum() - d * C
 
     # Concatenate derivatives into a single array
     dy = np.concatenate([dP, dS, [dC]])
@@ -148,23 +145,39 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
             y_out.non_persister_t.append(y_out.t[t_last_wet_i])
             y_out.non_persister_y.append(y_out.y[:, t_last_wet_i])
 
-    for inf_evt in range(p['n_strains']-1):
-        new_y0 = np.maximum( y_out.y[:,-1],0 ).flatten()
-        new_y0[inf_evt+1] = new_y0[inf_evt+1] + p['inoc']
-        # runs scipy's new ode solver
-        y_next = integrate.solve_ivp(
-                lambda t_var,y: func(t_var,y,**p,**kwargs), # use a lambda function
-                    # to sub in all parameters using the ** double indexing operator
-                    # for dictionaries, pass any additional arguments through
-                    # **kwargs as well
-                [p['inf_times'][inf_evt],p['inf_times'][inf_evt+1]], # initial and final time values
-                new_y0, # initial conditions
-                method=solver, # solver method
-                t_eval=t[ (t >= p['inf_times'][inf_evt]) * (t < p['inf_times'][inf_evt+1]) ], # time point vector at which to evaluate
-                # rtol=rtol, # relative tolerance value
-                # atol=atol # absolute tolerance value
-            )
+    for inf_evt in range(p['n_strains'] - 1):
+            # Calcula la inmunidad cruzada actual (último valor de la inmunidad cruzada)
+        cross_immunity = y_out.y[-1, -1]  # Último valor de la inmunidad cruzada
+        infection_probability = 1 if cross_immunity < 0.5 else 0  # Probabilidad basada en la inmunidad cruzada
 
+            # Genera un número aleatorio entre 0 y 1
+        random_value = np.random.random()
+
+            # Verifica si ocurre un nuevo evento de infección
+        if random_value > infection_probability:
+                # Actualiza las condiciones iniciales para el nuevo evento de infección
+            new_y0 = np.maximum(y_out.y[:, -1], 0).flatten()
+            new_y0[inf_evt + 1] = new_y0[inf_evt + 1] + p['inoc']
+
+                # Resuelve el sistema de ecuaciones diferenciales para el nuevo evento
+            y_next = integrate.solve_ivp(
+                    lambda t_var, y: func(t_var, y, **p, **kwargs),
+                    [p['inf_times'][inf_evt], p['inf_times'][inf_evt + 1]],
+                    new_y0,
+                    method=solver,
+                    t_eval=t[(t >= p['inf_times'][inf_evt]) * (t < p['inf_times'][inf_evt + 1])],
+                )
+
+                # Actualiza los resultados si se generó una solución válida
+            if len(y_next.t) > 0:
+                y_out.t = np.concatenate([y_out.t, y_next.t])
+            if y_next.y.ndim == 1:
+                y_next.y = y_next.y.transpose()
+                y_out.y = np.concatenate([y_out.y, y_next.y], axis=1)
+            else:gitn evento de infección, se mantienen los valores previos
+                y_out.t = np.concatenate([y_out.t, [p['inf_times'][inf_evt + 1]]])
+                y_out.y = np.concatenate([y_out.y, y_out.y[:, -1].reshape(-1, 1)], axis=1)
+        
         if not inf_evt == p['n_strains']-2 and len(y_next.t) > 0 and y_next.t[-1]-y_next.t[0] >= p['year_duration'] - p['t_dry']:
             if y_next.t[0] < p['year_duration']:
                 t_last_wet = p['t_dry'] - 1
@@ -230,6 +243,9 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
         return y_out
 
 
+def Hill(K, n, L):
+    
+    return 1-(1 / (1+ (K/L)**n)) 
 
 
 def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365):
@@ -247,7 +263,6 @@ def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365)
     params['year_duration'] = year_duration
     params['inf_times'] = np.append( np.concatenate([ np.sort( np.random.random(strains_per_season[y]) * t_dry + ( y * year_duration ) ) for y in range(years) ]), [year_duration*years] )
     params['sigma']= 0
-    params['sigma_C'] = 0
     params['inoc'] = 5.6e4 / 5e6
     params['cross_immunity_start'] = 0
     params['a'] = 7e-6 
@@ -262,56 +277,20 @@ def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365)
     
     return params
 
-def solveModel(persister_out=True, num_simulations=32):
+def solveModel(persister_out=False, num_simulations=32):
     '''
     Main method containing multiple solver calls and concatenation of results.
     Writes figures to file.
     '''
-    all_results = []
-    all_dfs = []
 
-    for sim in range(num_simulations):
-        p = params()
-        t = np.linspace(p['t_0'], p['t_f'], int((p['t_f'] - p['t_0']) / p['t_den']) + 1)
-
-        
-        sigma = np.zeros_like(t)
-        sigma_C = np.zeros_like(t)
-        
-        tau_c = p['inf_times'][0] + p['tau']
-        sigma_C[(t > tau_c)] = 1
-
-        for i, inf_time in enumerate(p['inf_times'][:-1]): 
-            tau_end = inf_time + p['tau']
-            
-            next_inf_time = p['inf_times'][i + 1]
-
-            sigma[(t > tau_end) & (t < next_inf_time)] = 1
-            
-            
-            
-
-        p['sigma'] = sigma
-        p['sigma_C'] = sigma_C
-
-        y_0 = initCond(p)  # get initial conditions
+    p = params()
+    t = np.linspace(p['t_0'], p['t_f'], int((p['t_f'] - p['t_0']) / p['t_den']) + 1)
+    y_0 = initCond(p)  # get initial conditions
 
         # Solve model
-        sol, df = odeSolver(p['odeFun'], t, y_0, p, solver="RK45", persister_out=persister_out)
+    sol = odeSolver(p['odeFun'], t, y_0, p, solver="RK45", persister_out=persister_out)
 
-        # Assign simulation ID to the dataframe
-        df['ID'] = sim
+    parasites,cross_im,coi,diversity,evenness= utils.shannon_diversity(sol, p['n_strains'])
+    plots.figTSeries(sol, coi, diversity, evenness, p, f_name='ODE_tseries_C.png')
 
-        all_results.append(sol)
-        all_dfs.append(df)
-
- 
-    combined = pd.concat(all_dfs, ignore_index=True)
-    
-    combined= combined.groupby(["ID", "Persister"]).agg('mean').reset_index()
-
-    plots.figDistributions(combined,p, f_name='sigma')
-
-    return all_results, combined
-
-solveModel()
+    return sol

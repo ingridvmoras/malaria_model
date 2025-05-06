@@ -228,33 +228,30 @@ def normal_distributions(distributions):
     plt.savefig(os.path.join('plots\\normal_distributions.png'), bbox_inches='tight')
     plt.show()
     
-def figDistributions(dat,params,f_name='ODE_persistence.png'):
+def figDistributions(dat, params, f_name='ODE_persistence.png'):
     sns.set_style("ticks")
-    # plt.figure(figsize=(6, 12), dpi=200) # make new figure
+    plt.style.use('seaborn-v0_8-ticks')  # Set the style for matplotlib
 
-    fig, (ax1, ax2, ax3) = plt.subplots(1,3, figsize = (24, 6))
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(24, 6))
 
-    # ax1 = plt.subplot(1, 3, 1) # Fig A
+    # Fig A - COI
     y_val = 'COI'
-    # sns.catplot(data=dat, x="Persister", y=y_val, kind="violin", color=".9", inner='quartiles',ax=ax1)
-    sns.violinplot(data=dat, x="Persister", y=y_val, color=".9", inner='quartiles' ,ax=ax1)
-    sns.swarmplot(data=dat, x="Persister",hue="Persister", y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"],ax=ax1)
+    sns.violinplot(data=dat, x="Persister", y=y_val, color=".9", inner='quartiles', ax=ax1)
+    sns.swarmplot(data=dat, x="Persister", hue="Persister", y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"], ax=ax1)
     ax1.set_xlabel('Persistent infection \n(until next May)')
-    ax1.set_ylabel('COI \nwithin each patient')
+    ax1.set_ylabel('Mean COI \nwithin each patient')
 
-    # ax2 = plt.subplot(1, 3, 2) # Fig A
+    # Fig B - Diversity
     y_val = 'Diversity'
-    # sns.catplot(data=dat, x="Persister", y=y_val, kind="violin", color=".9", inner='quartiles',ax=ax2)
-    sns.violinplot(data=dat, x="Persister", y=y_val, color=".9", inner='quartiles' ,ax=ax2)
-    sns.swarmplot(data=dat, x="Persister",hue="Persister", y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"],ax=ax2)
+    sns.violinplot(data=dat, x="Persister", y=y_val, color=".9", inner='quartiles', ax=ax2)
+    sns.swarmplot(data=dat, x="Persister", hue="Persister", y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"], ax=ax2)
     ax2.set_xlabel('Persistent infection \n(until next May)')
     ax2.set_ylabel('Mean Shannon diversity \nwithin each patient')
 
-    # ax3 = plt.subplot(1, 3, 3) # Fig A
+    # Fig C - Evenness
     y_val = 'Evenness'
-    # sns.catplot(data=dat, x="Persister", y=y_val, kind="violin", color=".9", inner='quartiles',ax=ax3)
-    sns.violinplot(data=dat, x="Persister", y=y_val, color=".9", inner='quartiles' ,ax=ax3)
-    sns.swarmplot(data=dat, x="Persister", hue="Persister",y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"],ax=ax3)
+    sns.violinplot(data=dat, x="Persister", y=y_val, color=".9", inner='quartiles', ax=ax3)
+    sns.swarmplot(data=dat, x="Persister", hue="Persister", y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"], ax=ax3)
     ax3.set_xlabel('Persistent infection \n(until next May)')
     ax3.set_ylabel('Mean Shannon evenness \nwithin each patient')
 
