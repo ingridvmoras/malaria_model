@@ -44,7 +44,7 @@ def odeFunLimitImmunity(t, y, **kwargs):
     # ODEs
     dP = (r - S - C) * P
     dS = sigma_t * (a * P) - e * S
-    dC = sigma_C*(g * P.sum()) - d * C
+    dC =  sigma_C * (g * P.sum()) - d * C
 
     # Concatenate derivatives into a single array
     dy = np.concatenate([dP, dS, [dC]])
@@ -232,7 +232,7 @@ def odeSolver(func,t,y0,p,solver='LSODA',rtol=1e-8,atol=1e-8,persister_out=False
 
 
 
-def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365):
+def params(mean_infections_per_season=3, t_dry=181, years=5, year_duration=365):
 
     """
     Returns default values constant values for the model in a dictionary.
@@ -262,56 +262,55 @@ def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365)
     
     return params
 
-def solveModel(persister_out=True, num_simulations=32):
+
+def solveModel(persister_out=False):
+
     '''
-    Main method containing multiple solver calls and concatenation of results.
+    Main method containing single solver and plotter calls.
     Writes figures to file.
     '''
-    all_results = []
-    all_dfs = []
+    p =params()
+    t = np.linspace(p['t_0'], p['t_f'], int((p['t_f'] - p['t_0']) / p['t_den']) + 1)
 
-    for sim in range(num_simulations):
-        p = params()
-        t = np.linspace(p['t_0'], p['t_f'], int((p['t_f'] - p['t_0']) / p['t_den']) + 1)
-
+    # Initialize sigma as an array of zeros with the same length as t
+    sigma = np.zeros_like(t)
+    sigma_C = np.zeros_like(t)
         
-        sigma = np.zeros_like(t)
-        sigma_C = np.zeros_like(t)
-        
-        tau_c = p['inf_times'][0] + p['tau']
-        sigma_C[(t > tau_c)] = 1
+    tau_c = p['inf_times'][0] + p['tau']
+    sigma_C[(t > tau_c)] = 1
 
-        for i, inf_time in enumerate(p['inf_times'][:-1]): 
-            tau_end = inf_time + p['tau']
-            
-            next_inf_time = p['inf_times'][i + 1]
+    
+    for i, inf_time in enumerate(p['inf_times'][:-1]): 
+        tau_end = inf_time + p['tau']
+        next_inf_time = p['inf_times'][i + 1]
 
-            sigma[(t > tau_end) & (t < next_inf_time)] = 1
-            
-            
-            
+        sigma[(t > tau_end) & (t < next_inf_time)] = 1
 
-        p['sigma'] = sigma
-        p['sigma_C'] = sigma_C
+    
+    p['sigma'] = sigma
+    p['sigma_C'] = sigma_C
+    
+    
+    y_0 = initCond(p) # get initial conditions
+    
+        # time vector based on minimum, maximum, and time step values
 
-        y_0 = initCond(p)  # get initial conditions
-
-        # Solve model
-        sol, df = odeSolver(p['odeFun'], t, y_0, p, solver="RK45", persister_out=persister_out)
-
-        # Assign simulation ID to the dataframe
-        df['ID'] = sim
-
-        all_results.append(sol)
-        all_dfs.append(df)
+    # Solve model
+    sol=odeSolver(p['odeFun'],t,y_0,p,solver="RK45")
 
  
-    combined = pd.concat(all_dfs, ignore_index=True)
+    parasites,cross_im,coi,diversity,evenness =utils.shannon_diversity(sol,p['n_strains'])
     
-    combined= combined.groupby(["ID", "Persister"]).agg('mean').reset_index()
+    plots.figTSeries(sol, coi, diversity,evenness,p,f_name='ODE_tseries_persistence_single_sigma.png')
 
-    plots.figDistributions(combined,p, f_name='sigma')
 
-    return all_results, combined
+    # print(np.array(sol.persister_t).astype('int'))
+    # # print(sol.persister_y)
 
-solveModel()
+    # # Call plotting of figure 1
+    
+    return sol
+
+
+
+
