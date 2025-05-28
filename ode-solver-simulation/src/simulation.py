@@ -34,7 +34,10 @@ for idx,df in s2:
 
 uniform = uniform.groupby(["ID", "Persister"]).agg('mean').reset_index()
 
-plots.figDistributions(uniform, p, 'uniform')
+r_values_uniform = uniform.groupby("Persister").mean()
+r_values_uniform['exp']= 'r'
+
+plots.figDistributions(uniform, p, '/home/lunaditraverso45/malaria_model/ode-solver-simulation/src/plots/uniform')
 
 # #Third simulation: alpha is a value between 7e- 5to 7e-7 
 # exponents = np.arange(4, 8, 0.25)
@@ -74,10 +77,15 @@ d2= multiNormal.copy()
 normal = normal.groupby(["ID", "Persister"]).agg('mean').reset_index()
 multiNormal = multiNormal.groupby(["ID", "Persister"]).agg('mean').reset_index()
 
+normal_v = normal.groupby("Persister").mean()
+normal_v['exp']= 'a-normal'
+multiNormal_v = multiNormal.groupby("Persister").mean()
+multiNormal_v['exp']= 'a-multiNorm'
 
 
+data = pd.concat([normal_v, multiNormal_v,r_values_uniform], ignore_index=True)
 
-
+data.to_csv('/home/lunaditraverso45/malaria_model/ode-solver-simulation/src/data.csv', index=False)
 # #Changing mean infection times 
 
 # #mean_infections=np.round(np.linspace(1,10,10))

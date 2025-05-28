@@ -234,12 +234,12 @@ def figDistributions(dat, params, f_name='ODE_persistence.png'):
     sns.set_style("ticks")
     plt.style.use('seaborn-v0_8-ticks')  # Set the style for matplotlib
 
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(24, 6))
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 6))
 
     # Fig A - COI
     y_val = 'COI'
     sns.violinplot(data=dat, x="Persister", y=y_val, color=".9", inner='quartiles', ax=ax1)
-    sns.swarmplot(data=dat, x="Persister", y=y_val, size=5, hue="Persister", palette=sns.color_palette(), ax=ax1, legend=False)
+    sns.swarmplot(data=dat, x="Persister", y=y_val, size=4, hue="Persister", palette=sns.color_palette(), ax=ax1, legend=False)
 
     # Add statistical significance annotation
     box_pairs = [(True, False)]
@@ -256,7 +256,7 @@ def figDistributions(dat, params, f_name='ODE_persistence.png'):
     # Fig B - Diversity
     y_val = 'Diversity'
     sns.violinplot(data=dat, x="Persister", y=y_val, color=".9", inner='quartiles', ax=ax2)
-    sns.swarmplot(data=dat, x="Persister", hue="Persister", y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"], ax=ax2)
+    sns.swarmplot(data=dat, x="Persister", hue="Persister", y=y_val, size=4,palette=sns.color_palette(), ax=ax2, legend=False)
     ax2.set_xlabel('Persistent infection \n(until next May)')
     ax2.set_ylabel('Mean Shannon diversity \nwithin each patient')
     
@@ -274,7 +274,7 @@ def figDistributions(dat, params, f_name='ODE_persistence.png'):
     # Fig C - Evenness
     y_val = 'Evenness'
     sns.violinplot(data=dat, x="Persister", y=y_val, color=".9", inner='quartiles', ax=ax3)
-    sns.swarmplot(data=dat, x="Persister", hue="Persister", y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"], ax=ax3)
+    sns.swarmplot(data=dat, x="Persister", hue="Persister", y=y_val, size=4, palette=sns.color_palette(), ax=ax3, legend=False)
     ax3.set_xlabel('Persistent infection \n(until next May)')
     ax3.set_ylabel('Mean Shannon evenness \nwithin each patient')
     

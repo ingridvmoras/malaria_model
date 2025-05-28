@@ -77,7 +77,9 @@ def Hill(K, n, L):
     Returns:
         float - Probability of successful infection.
     """
-    return 1 - (1 / (1 + (K / L)**n))
+    epsilon = 1e-10  # Small value to avoid division by zero
+    L_safe = np.maximum(L, epsilon)
+    return 1 - (1 / (1 + (K / L_safe)**n))
 
 
 def odeSolver(func, t, y0, p, solver='LSODA', rtol=1e-8, atol=1e-8, persister_out=False, **kwargs):
@@ -273,7 +275,7 @@ def params(mean_infections_per_season=3, t_dry=181, years=20, year_duration=365)
     return params
 
 
-def solveModel(persister_out=True, num_simulations=32):
+def solveModel(persister_out=True, num_simulations=32, **kwargs):
     '''
     Main method containing multiple solver calls and concatenation of results.
     Writes figures to file.
@@ -283,6 +285,8 @@ def solveModel(persister_out=True, num_simulations=32):
 
     for sim in range(num_simulations):
         p = params()
+        
+        p.update(kwargs)
         t = np.linspace(p['t_0'], p['t_f'], int((p['t_f'] - p['t_0']) / p['t_den']) + 1)
 
 
@@ -302,8 +306,69 @@ def solveModel(persister_out=True, num_simulations=32):
     
     combined= combined.groupby(["ID", "Persister"]).agg('mean').reset_index()
 
-    plots.figDistributions(combined,p, f_name='sigma')
+    
 
     return all_results, combined
 
-solveModel(num_simulations=120)
+# Definir los rangos de K_hill y n_hill
+K_hill_values = np.linspace(0.5, 0.8, 4)  # [0.5, 0.6, 0.7, 0.8]
+n_hill_values = np.arange(1, 6)           # [1, 2, 3, 4, 5]
+
+# DataFrame para guardar los resultados medios
+results = []
+
+for K_hill in K_hill_values:
+    for n_hill in n_hill_values:
+        _, combined = solveModel(
+            num_simulations=120,
+            K_hill=K_hill,
+            n_hill=n_hill
+        )
+        # Calcular la media para Persister True y False por separado
+        for persister_value in [True, False]:
+            subset = combined[combined['Persister'] == persister_value]
+            if not subset.empty:
+                means = subset.drop(columns=['ID', 'Persister']).mean()
+                means['K_hill'] = K_hill
+                means['n_hill'] = n_hill
+                means['Persister'] = persister_value
+                results.append(means)
+
+# %%
+df_means = pd.DataFrame(results)
+
+# Valores experimentales de COI para Persister False y True
+exp_coi = {False: 2.263159, True: 3.080460}
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
+
+# Evita el DeprecationWarning seleccionando solo la columna 'COI'
+vmin = df_means.groupby('Persister')['COI'].apply(lambda s: np.abs(s - exp_coi[s.name])).min()
+vmax = df_means.groupby('Persister')['COI'].apply(lambda s: np.abs(s - exp_coi[s.name])).max()
+
+for idx, persister_value in enumerate([False, True]):
+    df_means_p = df_means[df_means['Persister'] == persister_value].copy()
+    df_means_p['diff'] = np.abs(df_means_p['COI'] - exp_coi[persister_value])
+    heatmap_data = df_means_p.pivot(index='n_hill', columns='K_hill', values='diff')
+    heatmap_data = heatmap_data.sort_index().sort_index(axis=1)
+    rounded_cols = [f"{col:.1g}" for col in heatmap_data.columns]
+    sns.heatmap(
+        heatmap_data,
+        annot=False,
+        cmap='magma',
+        ax=axes[idx],
+        cbar=idx == 1,
+        fmt=".2f",
+        vmin=vmin,
+        vmax=vmax
+    )
+    axes[idx].set_title(f"Persistent infection = {persister_value}")
+    axes[idx].set_xlabel('K [half-saturation of cross-immunity]', labelpad=15)
+    axes[idx].set_ylabel('n [Hill coefficient ]', rotation=90, labelpad=15)  # Etiqueta rotada 90°
+    axes[idx].yaxis.set_label_position("left")
+    axes[idx].set_yticklabels(heatmap_data.index, rotation=0)  # Muestra los valores de n
+    axes[idx].set_xticklabels(rounded_cols, rotation=0)
+
+plt.tight_layout()
+plt.show()
+

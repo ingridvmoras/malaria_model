@@ -43,7 +43,7 @@ def odeFunLimitImmunity(t, y, **kwargs):
         # ODEs
         dP = (r - S - C) * P
         dS = sigma_t * (a * P) - e * S
-        dC= sigma_C * (g * P.sum())- d * C
+        dC=  (g * P.sum())- d * C
  
         
         dy = np.concatenate([dP, dS, [dC]])
@@ -318,6 +318,6 @@ def solveModel(persister_out=True, num_simulations=32):
 
 
 # Run the simulations
-solveModel(num_simulations=32)
+solveModel(num_simulations=120)
 
 
