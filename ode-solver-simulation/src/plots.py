@@ -4,6 +4,8 @@ from utils import shannon_diversity
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import statannotations
+from statannotations.Annotator import Annotator
 
 d_name = os.path.join(os.path.dirname(__file__), 'plots')
 os.makedirs(d_name, exist_ok=True)
@@ -237,7 +239,17 @@ def figDistributions(dat, params, f_name='ODE_persistence.png'):
     # Fig A - COI
     y_val = 'COI'
     sns.violinplot(data=dat, x="Persister", y=y_val, color=".9", inner='quartiles', ax=ax1)
-    sns.swarmplot(data=dat, x="Persister", hue="Persister", y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"], ax=ax1)
+    sns.swarmplot(data=dat, x="Persister", y=y_val, size=5, hue="Persister", palette=sns.color_palette(), ax=ax1, legend=False)
+
+    # Add statistical significance annotation
+    box_pairs = [(True, False)]
+    annotator = Annotator(ax1, box_pairs, data=dat, x="Persister", y=y_val)
+    annotator.configure(test="t-test_ind", text_format="star", loc="outside")
+    annotator.apply_and_annotate()
+
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.set_aspect('auto')
     ax1.set_xlabel('Persistent infection \n(until next May)')
     ax1.set_ylabel('Mean COI \nwithin each patient')
 
@@ -247,6 +259,17 @@ def figDistributions(dat, params, f_name='ODE_persistence.png'):
     sns.swarmplot(data=dat, x="Persister", hue="Persister", y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"], ax=ax2)
     ax2.set_xlabel('Persistent infection \n(until next May)')
     ax2.set_ylabel('Mean Shannon diversity \nwithin each patient')
+    
+    
+    ax2.spines['top'].set_visible(False)
+    ax2.spines['right'].set_visible(False)
+    ax2.set_aspect('auto')
+
+    # Add statistical significance annotation for Diversity
+    box_pairs = [(True, False)]
+    annotator = Annotator(ax2, box_pairs, data=dat, x="Persister", y=y_val)
+    annotator.configure(test="t-test_ind", text_format="star", loc="outside")
+    annotator.apply_and_annotate()
 
     # Fig C - Evenness
     y_val = 'Evenness'
@@ -254,5 +277,16 @@ def figDistributions(dat, params, f_name='ODE_persistence.png'):
     sns.swarmplot(data=dat, x="Persister", hue="Persister", y=y_val, size=2, palette=["#1f77b4", "#ff7f0e"], ax=ax3)
     ax3.set_xlabel('Persistent infection \n(until next May)')
     ax3.set_ylabel('Mean Shannon evenness \nwithin each patient')
+    
+     
+    ax3.spines['top'].set_visible(False)
+    ax3.spines['right'].set_visible(False)
+    ax3.set_aspect('auto')
+
+    # Add statistical significance annotation for Evenness
+    box_pairs = [(True, False)]
+    annotator = Annotator(ax3, box_pairs, data=dat, x="Persister", y=y_val)
+    annotator.configure(test="t-test_ind", text_format="star", loc="outside")
+    annotator.apply_and_annotate()
 
     plt.savefig(f_name, bbox_inches='tight')

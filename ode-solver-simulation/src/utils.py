@@ -47,15 +47,18 @@ def sweep_parameters(params, parameter, values):
         results.append((value, sol))
     return results
 
-def runs(param,params,times):
-    results= []
-    if param=='r':
-        for i in tqdm(range(times)):
-            p= params.copy()
-            p['r'] = np.log(np.random.uniform(1, 14, p['n_strains']))/2
-            sol= solveModel(p)
-            results.append((i+1, sol))
-    return results
+def runs(param,params,times, persister_out=False):
+    results = []
+    distributions = []
+    for i in tqdm(range(times)):
+        p = params.copy()
+        p['r'] = np.log(np.random.uniform(1, 14, p['n_strains']))/2
+        sol, df = solveModel(p, persister_out=persister_out)
+        results.append((i+1, df))
+        for r in p['r']:
+            distributions.append((i+1, r))
+    ds = pd.DataFrame(distributions, columns=['simulation', 'r'])
+    return results, ds
     
 def runs_a(params, times, distribution='uniform', sd=[1],persister_out=False):
     results= []

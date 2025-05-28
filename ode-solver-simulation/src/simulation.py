@@ -16,13 +16,25 @@ p= params()
 # #Hypothesis: this should not effect on persistency  
      
 # # First simulation: r is a value in a uniform distribution between 0.5 to 1
-# r_values_uniform = np.log(np.sort(np.random.uniform(1, 14, 10)))/2
-# print('Calculating simulation 1')
-# s1= sweep_parameters(p,'r',r_values_uniform)
+#r_values_uniform = np.log(np.sort(np.random.uniform(1, 14, 10)))/2
+#print('Calculating simulation 1')
+#s1= sweep_parameters(p,'r',r_values_uniform)
 
 # # Second simulation: r is a randomly picked value in the same uniform distribution for each n_strain
-# print('Calculating simulation 2')
-# s2= runs('r',p,10)
+print('Calculating simulation 2')
+s2, distributions3= runs('r',p,120, persister_out=True)
+
+uniform = pd.DataFrame()
+for idx,df in s2:
+     df = df.copy()
+     df['ID'] = idx + 1  
+     uniform = pd.concat([uniform, df], ignore_index=True)
+
+
+
+uniform = uniform.groupby(["ID", "Persister"]).agg('mean').reset_index()
+
+plots.figDistributions(uniform, p, 'uniform')
 
 # #Third simulation: alpha is a value between 7e- 5to 7e-7 
 # exponents = np.arange(4, 8, 0.25)
@@ -33,34 +45,34 @@ p= params()
 
 # #Fourth simulation: alpha is randomly picked value from a normal distribution for each n_strain
 
-#print('Calculating simulation 4')
+print('Calculating simulation 4')
 # s41= runs_a(p,10) #uniforme
-#s4,distributions= runs_a(p,120,'normal',[1*(10**-6)],persister_out=True)
-#sd_values = np.linspace( 1 * (10**-6)- (0.75 *1 * (10**-6) ), 1 * (10**-6) + (0.75 *1 * (10**-6) ), 120)
-#s4_2, distributions2 = runs_a(p, 120, 'multiNorm', sd_values, persister_out=True)
+s4,distributions= runs_a(p,120,'normal',[1*(10**-6)],persister_out=True)
+sd_values = np.linspace( 1 * (10**-6)- (0.75 *1 * (10**-6) ), 1 * (10**-6) + (0.75 *1 * (10**-6) ), 120)
+s4_2, distributions2 = runs_a(p, 120, 'multiNorm', sd_values, persister_out=True)
 
 # Combine all dataframes into one dataframe with an ID column, the ID column is comparable with the kids ID
 
-#normal = pd.DataFrame()
+normal = pd.DataFrame()
 
-# for idx, (sd, df) in enumerate(s4_2):
-#     df = df.copy()
-#     df['sd'] = sd
-#     df['ID'] = idx + 1  
-#     normal = pd.concat([normal, df], ignore_index=True)
+for idx, (sd, df) in enumerate(s4_2):
+     df = df.copy()
+     df['sd'] = sd
+     df['ID'] = idx + 1  
+     normal = pd.concat([normal, df], ignore_index=True)
     
-# multiNormal = pd.DataFrame()
+multiNormal = pd.DataFrame()
 
-# for idx, (id, df) in enumerate(s4):
-#     df = df.copy()
-#     df['ID'] = idx + 1
-#     multiNormal = pd.concat([multiNormal, df], ignore_index=True)
+for idx, (id, df) in enumerate(s4):
+    df = df.copy()
+    df['ID'] = idx + 1
+    multiNormal = pd.concat([multiNormal, df], ignore_index=True)
 
-# d1= normal.copy()
-# d2= multiNormal.copy()
+d1= normal.copy()
+d2= multiNormal.copy()
 
-# normal = normal.groupby(["ID", "Persister"]).agg('mean').reset_index()
-# multiNormal = multiNormal.groupby(["ID", "Persister"]).agg('mean').reset_index()
+normal = normal.groupby(["ID", "Persister"]).agg('mean').reset_index()
+multiNormal = multiNormal.groupby(["ID", "Persister"]).agg('mean').reset_index()
 
 
 
@@ -90,8 +102,8 @@ p= params()
 # plots.normal_distributions(distributions2)
 
 
-# plots.figDistributions(normal, p, 'normal')
-# plots.figDistributions(multiNormal, p, 'multiNorm')
+plots.figDistributions(normal, p, 'normal')
+plots.figDistributions(multiNormal, p, 'multiNorm')
 
 
 
