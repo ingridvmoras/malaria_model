@@ -1,10 +1,8 @@
 
 import numpy as np
 import pandas as pd
-import persistance
-from utils import sweep_parameters, runs, params,sweep_mean_infections,shannon_diversity,runs_a, sweep_inf_alpha
+from utils import runs, params, runs_a
 from scipy.stats import ttest_ind
-import matplotlib.pyplot as plt
 import plots
 import seaborn as sns
 
@@ -37,7 +35,7 @@ uniform = uniform.groupby(["ID", "Persister"]).agg('mean').reset_index()
 r_values_uniform = uniform.groupby("Persister").mean()
 r_values_uniform['exp']= 'r'
 
-plots.figDistributions(uniform, p, '/home/lunaditraverso45/malaria_model/ode-solver-simulation/src/plots/uniform')
+plots.figDistributions(uniform, p, '/home/lunaditraverso45/malaria_model/plots/uniform')
 
 # #Third simulation: alpha is a value between 7e- 5to 7e-7 
 # exponents = np.arange(4, 8, 0.25)
@@ -85,7 +83,7 @@ multiNormal_v['exp']= 'a-multiNorm'
 
 data = pd.concat([normal_v, multiNormal_v,r_values_uniform], ignore_index=True)
 
-data.to_csv('/home/lunaditraverso45/malaria_model/ode-solver-simulation/src/data.csv', index=False)
+data.to_csv('/home/lunaditraverso45/malaria_model/data/data.csv', index=False)
 # #Changing mean infection times 
 
 # #mean_infections=np.round(np.linspace(1,10,10))
@@ -110,8 +108,8 @@ data.to_csv('/home/lunaditraverso45/malaria_model/ode-solver-simulation/src/data
 # plots.normal_distributions(distributions2)
 
 
-plots.figDistributions(normal, p, 'normal')
-plots.figDistributions(multiNormal, p, 'multiNorm')
+plots.figDistributions(normal, p, '/home/lunaditraverso45/malaria_model/plots/normal')
+plots.figDistributions(multiNormal, p, '/home/lunaditraverso45/malaria_model/plots/multiNorm')
 
 
 

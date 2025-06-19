@@ -5,14 +5,10 @@ import numpy as np  # handle arrays
 import pandas as pd
 from scipy import integrate  # numerical integration
 import joblib as jl
-import itertools as it
 
 import seaborn as sns  # for plots
-import matplotlib.pyplot as plt
-import matplotlib.colors as mlc
 
 import plots
-import utils
 from scipy.stats import ttest_ind
 
 
